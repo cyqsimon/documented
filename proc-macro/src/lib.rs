@@ -21,7 +21,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
                 _ => None,
             })
             .map(|expr| match expr {
-                Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value().trim().to_string()),
+                Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value()),
                 e => Err(e),
             })
             .collect::<Result<Vec<_>, _>>();
@@ -41,7 +41,13 @@ pub fn documented(input: TokenStream) -> TokenStream {
                 .into();
         }
 
-        literals.join("\n")
+        let trimmed: Vec<_> = literals
+            .iter()
+            .flat_map(|lit| lit.split("\n").collect::<Vec<_>>())
+            .map(|line| line.trim().to_string())
+            .collect();
+
+        trimmed.join("\n")
     };
 
     quote! {
