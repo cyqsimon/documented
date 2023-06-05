@@ -6,15 +6,15 @@ version = 3
 name = "documented"
 version = "0.1.0"
 dependencies = [
- "quote",
- "syn",
+ "documented-derive",
 ]
 
 [[package]]
-name = "documented-integration-test"
+name = "documented-derive"
 version = "0.1.0"
 dependencies = [
- "documented",
+ "quote",
+ "syn",
 ]
 
 [[package]]

@@ -8,9 +8,5 @@ name = "documented"
 repository = "https://github.com/cyqsimon/documented.git"
 version = "0.1.0"
 
-[lib]
-proc_macro = true
-
 [dependencies]
-quote = "1.0.28"
-syn = "2.0.18"
+documented-derive = {path = "../derive"}
