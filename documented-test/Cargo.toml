@@ -1,7 +1,8 @@
 [package]
 edition = "2021"
 name = "documented-test"
-version = "0.1.0"
+publish = false
+version = "0.1.1"
 
-[dependencies]
+[dev-dependencies]
 documented = {path = "../lib"}

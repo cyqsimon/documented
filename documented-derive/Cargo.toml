@@ -2,12 +2,13 @@
 description = "Derive macro for `documented`"
 edition = "2021"
 license = "MIT"
+license-file = "../LICENSE"
 name = "documented-derive"
 repository = "https://github.com/cyqsimon/documented"
-version = "0.1.0"
+version = "0.1.1"
 
 [lib]
-proc_macro = true
+proc-macro = true
 
 [dependencies]
 quote = "1.0.28"

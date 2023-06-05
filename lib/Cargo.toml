@@ -5,9 +5,11 @@ description = "Trait and derive macro for accessing your type's documentation at
 edition = "2021"
 keywords = ["documentation", "proc-macro", "reflection"]
 license = "MIT"
+license-file = "../LICENSE"
 name = "documented"
+readme = "../README.md"
 repository = "https://github.com/cyqsimon/documented"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 documented-derive = {path = "../documented-derive", version = "0.1.0"}
