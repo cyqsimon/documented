@@ -9,4 +9,4 @@ repository = "https://github.com/cyqsimon/documented.git"
 version = "0.1.0"
 
 [dependencies]
-documented-derive = {path = "../derive"}
+documented-derive = {path = "../documented-derive"}

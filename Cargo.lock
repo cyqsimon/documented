@@ -18,6 +18,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "documented-test"
+version = "0.1.0"
+dependencies = [
+ "documented",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.59"
 source = "registry+https://github.com/rust-lang/crates.io-index"

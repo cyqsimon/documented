@@ -2,5 +2,6 @@
 
 members = [
   "lib",
-  "derive",
+  "documented-derive",
+  "documented-test",
 ]

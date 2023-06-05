@@ -5,6 +5,8 @@ Derive macro for accessing your type's documentation at runtime
 ## Quick start
 
 ```rust
+use documented::Documented;
+
 fn main() {
     /// Nice.
     /// Multiple single-line doc comments are supported.
@@ -14,7 +16,7 @@ fn main() {
     Note the lack of spaces in front of this line.
     */
     #[doc = "Attribute-style documentation is supported too."]
-    #[derive(documented::Documented)]
+    #[derive(Documented)]
     struct BornIn69;
 
     let doc_str = "Nice.
