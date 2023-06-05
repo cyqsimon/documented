@@ -1,6 +1,11 @@
 [package]
+authors = ["cyqsimon <28627918+cyqsimon@users.noreply.github.com>"]
+categories = ["rust-patterns"]
+description = "Derive macro for accessing your type's documentation at runtime"
 edition = "2021"
+keywords = ["documentation", "proc-macro", "reflection"]
 name = "documented"
+repository = "https://github.com/cyqsimon/documented.git"
 version = "0.1.0"
 
 [lib]
