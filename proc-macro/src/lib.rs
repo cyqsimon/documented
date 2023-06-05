@@ -2,6 +2,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, spanned::Spanned, DeriveInput, Error, Expr, ExprLit, Lit, Meta};
 
+/// Create an associated constant `DOCS` on your type, which allows you to access
+/// your type's documentation at runtime.
 #[proc_macro_derive(Documented)]
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
