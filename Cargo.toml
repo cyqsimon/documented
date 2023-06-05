@@ -1,11 +1,6 @@
-[package]
-edition = "2021"
-name = "documented"
-version = "0.1.0"
+[workspace]
 
-[lib]
-proc_macro = true
-
-[dependencies]
-quote = "1.0.28"
-syn = "2.0.18"
+members = [
+    "proc-macro",
+    "integration-test",
+]
