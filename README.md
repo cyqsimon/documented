@@ -2,6 +2,8 @@
 
 Derive macro for accessing your type's documentation at runtime
 
+[crates.io](https://crates.io/crates/documented)
+
 ## Quick start
 
 ```rust
