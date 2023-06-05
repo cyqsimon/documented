@@ -19,7 +19,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
                 _ => None,
             })
             .map(|expr| match expr {
-                Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value()),
+                Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value().trim().to_string()),
                 e => Err(e),
             })
             .collect::<Result<Vec<_>, _>>();
