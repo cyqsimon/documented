@@ -1,12 +1,13 @@
 [package]
 authors = ["cyqsimon <28627918+cyqsimon@users.noreply.github.com>"]
 categories = ["rust-patterns"]
-description = "Derive macro for accessing your type's documentation at runtime"
+description = "Trait and derive macro for accessing your type's documentation at runtime"
 edition = "2021"
 keywords = ["documentation", "proc-macro", "reflection"]
+license = "MIT"
 name = "documented"
-repository = "https://github.com/cyqsimon/documented.git"
+repository = "https://github.com/cyqsimon/documented"
 version = "0.1.0"
 
 [dependencies]
-documented-derive = {path = "../documented-derive"}
+documented-derive = {path = "../documented-derive", version = "0.1.0"}

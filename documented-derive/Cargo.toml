@@ -1,6 +1,9 @@
 [package]
+description = "Derive macro for `documented`"
 edition = "2021"
+license = "MIT"
 name = "documented-derive"
+repository = "https://github.com/cyqsimon/documented"
 version = "0.1.0"
 
 [lib]
