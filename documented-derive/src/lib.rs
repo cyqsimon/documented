@@ -50,6 +50,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
     };
 
     quote! {
+        #[automatically_derived]
         impl documented::Documented for #ident {
             const DOCS: &'static str = #doc_comments;
         }
