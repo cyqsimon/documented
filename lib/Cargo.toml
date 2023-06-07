@@ -8,7 +8,7 @@ license = "MIT"
 name = "documented"
 readme = "../README.md"
 repository = "https://github.com/cyqsimon/documented"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies]
-documented-derive = {path = "../documented-derive", version = "0.1.0"}
+documented-derive = {path = "../documented-derive", version = "0.1.2"}

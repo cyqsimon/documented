@@ -4,14 +4,14 @@ version = 3
 
 [[package]]
 name = "documented"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "documented-derive",
 ]
 
 [[package]]
 name = "documented-derive"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "quote",
  "syn",
@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "documented-test"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "documented",
 ]

@@ -2,7 +2,7 @@
 edition = "2021"
 name = "documented-test"
 publish = false
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies]
 documented = {path = "../lib"}
