@@ -1,5 +1,5 @@
 {
-  description = "Server app for SlimeVR ecosystem";
+  description = "Trait and derive macro for accessing your type's documentation at runtime";
 
   inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
