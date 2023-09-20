@@ -1,0 +1,4 @@
+max_width = 100 # See https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#width_heuristics
+single_line_if_else_max_width = 60
+struct_lit_width = 40
+struct_variant_width = 50
