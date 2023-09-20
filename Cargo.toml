@@ -4,4 +4,4 @@ members = ["lib", "documented-derive", "documented-test"]
 resolver = "2"
 
 [workspace.dependencies]
-phf = { version = "0.11", default-features = false, features = ["macros"]}
+phf = { version = "0.11", default-features = false, features = ["macros"] }
