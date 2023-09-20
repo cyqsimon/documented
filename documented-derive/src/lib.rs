@@ -15,11 +15,30 @@ pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let doc_comments = match get_comment(&input.attrs) {
-        Ok(Some(r)) => r,
-        // Should we use an Option instead?
-        Ok(None) => "".to_string(),
+        Ok(Some(doc)) => doc,
+        Ok(None) => {
+            return Error::new(input.ident.span(), "Missing doc comments")
+                .into_compile_error()
+                .into()
+        }
         Err(e) => return e.into_compile_error().into(),
     };
+
+    let ident = input.ident;
+
+    quote! {
+        #[automatically_derived]
+        impl documented::Documented for #ident {
+            const DOCS: &'static str = #doc_comments;
+        }
+    }
+    .into()
+}
+
+/// Derive proc-macro for `DocumentedFields` trait.
+#[proc_macro_derive(DocumentedFields)]
+pub fn documented_fields(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
 
     let fields_doc_comments = {
         let fields_attrs: Vec<(syn::Ident, Vec<Attribute>)> = match input.data.clone() {
@@ -63,9 +82,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
 
     quote! {
         #[automatically_derived]
-        impl documented::Documented for #ident {
-            const DOCS: &'static str = #doc_comments;
-
+        impl documented::DocumentedFields for #ident {
             const FIELD_DOCS: &'static [&'static str] = &[#(#field_comments),*];
 
             fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize> {

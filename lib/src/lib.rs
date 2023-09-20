@@ -1,4 +1,4 @@
-pub use documented_derive::Documented;
+pub use documented_derive::{Documented, DocumentedFields};
 
 #[doc(hidden)]
 pub use phf as _private_phf_reexport_for_macro;
@@ -8,9 +8,11 @@ pub use phf as _private_phf_reexport_for_macro;
 pub trait Documented {
     /// The static doc comments on this type.
     const DOCS: &'static str;
+}
 
-    /// Each index is a different field docs.
-    /// It's indexed by field order.
+pub trait DocumentedFields {
+    /// The static doc comments on each field or variant of this type, indexed by
+    /// field/variant order.
     const FIELD_DOCS: &'static [&'static str];
 
     fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize>;
