@@ -2,11 +2,6 @@
 
 members = ["lib", "documented-derive", "documented-test"]
 resolver = "2"
-members = [
-  "lib",
-  "documented-derive",
-  "documented-test",
-]
 
 [workspace.dependencies]
 phf = { version = "0.11", default-features = false, features = ["macros"]}
