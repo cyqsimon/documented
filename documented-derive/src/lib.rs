@@ -41,19 +41,18 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let fields_doc_comments = {
-        let fields_attrs: Vec<(syn::Ident, Vec<Attribute>)> = match input.data.clone() {
-            Data::Enum(DataEnum { variants, .. }) => {
-                variants.into_iter().map(|v| (v.ident, v.attrs)).collect()
-            }
-            Data::Struct(DataStruct { fields, .. }) => fields
+        let fields_attrs: Vec<(Option<syn::Ident>, Vec<Attribute>)> = match input.data.clone() {
+            Data::Enum(DataEnum { variants, .. }) => variants
                 .into_iter()
-                .filter(|f| f.ident.is_some())
-                .map(|f| (f.ident.unwrap(), f.attrs))
+                .map(|v| (Some(v.ident), v.attrs))
                 .collect(),
+            Data::Struct(DataStruct { fields, .. }) => {
+                fields.into_iter().map(|f| (f.ident, f.attrs)).collect()
+            }
             Data::Union(DataUnion { fields, .. }) => fields
                 .named
                 .into_iter()
-                .map(|f| (f.ident.unwrap(), f.attrs))
+                .map(|f| (f.ident, f.attrs))
                 .collect(),
         };
 
@@ -73,8 +72,8 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
     let phf_match_arms: Vec<_> = field_idents
         .into_iter()
-        .map(|ident| ident.to_string())
         .enumerate()
+        .filter_map(|(i, o)| o.map(|ident| (i, ident.to_string())))
         .map(|(i, ident)| quote! { #ident => #i, })
         .collect();
 
