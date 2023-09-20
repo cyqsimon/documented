@@ -14,7 +14,7 @@ fn crate_module_path() -> Path {
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    let doc_comments = match get_comment(input.attrs.clone()) {
+    let doc_comments = match get_comment(&input.attrs) {
         Ok(Some(r)) => r,
         // Should we use an Option instead?
         Ok(None) => "".to_string(),
@@ -40,7 +40,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
 
         match fields_attrs
             .into_iter()
-            .map(|(i, attrs)| get_comment(attrs).map(|c| (i, c.unwrap_or_default())))
+            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c.unwrap_or_default())))
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t,
@@ -81,40 +81,31 @@ pub fn documented(input: TokenStream) -> TokenStream {
     .into()
 }
 
-fn get_comment(attrs: Vec<Attribute>) -> syn::Result<Option<String>> {
-    let maybe_str_literals = attrs
-        .into_iter()
+fn get_comment(attrs: &[Attribute]) -> syn::Result<Option<String>> {
+    let string_literals = attrs
+        .iter()
         .filter_map(|attr| match attr.meta {
-            Meta::NameValue(name_value) if name_value.path.is_ident("doc") => {
-                Some(name_value.value)
+            Meta::NameValue(ref name_value) if name_value.path.is_ident("doc") => {
+                Some(&name_value.value)
             }
             _ => None,
         })
         .map(|expr| match expr {
-            Expr::Lit(ExprLit {
-                lit: Lit::Str(s), ..
-            }) => Ok(s.value()),
-            e => Err(e),
-        })
-        .collect::<Result<Vec<_>, _>>();
-
-    let literals = match maybe_str_literals {
-        Ok(lits) => lits,
-        Err(expr) => {
-            return Err(Error::new(
-                expr.span(),
+            Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value()),
+            other => Err(Error::new(
+                other.span(),
                 "Doc comment is not a string literal",
-            ))
-        }
-    };
+            )),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
-    if literals.is_empty() {
+    if string_literals.is_empty() {
         return Ok(None);
     }
 
-    let trimmed: Vec<_> = literals
+    let trimmed: Vec<_> = string_literals
         .iter()
-        .flat_map(|lit| lit.split("\n").collect::<Vec<_>>())
+        .flat_map(|lit| lit.split('\n').collect::<Vec<_>>())
         .map(|line| line.trim().to_string())
         .collect();
 
