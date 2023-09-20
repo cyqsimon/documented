@@ -12,3 +12,4 @@ version = "0.1.2"
 
 [dependencies]
 documented-derive = {path = "../documented-derive", version = "0.1.2"}
+phf.workspace = true

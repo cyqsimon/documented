@@ -6,9 +6,20 @@ mod test_use {
     fn it_works() {
         /// 69
         #[derive(Documented)]
-        struct Nice;
+        #[allow(dead_code)]
+        struct Nice {
+            /// 1
+            first: i32,
+            second: i32,
+            /// 3
+            third: i32,
+        }
 
         assert_eq!(Nice::DOCS, "69");
+        assert_eq!(Nice::FIELD_DOCS.len(), 3);
+        assert_eq!(Nice::get_field_comment("first"), Some("1"));
+        assert_eq!(Nice::get_field_comment("second"), Some(""));
+        assert_eq!(Nice::get_field_comment("third"), Some("3"));
     }
 
     #[test]
