@@ -58,7 +58,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
         match fields_attrs
             .into_iter()
-            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c.unwrap_or_default())))
+            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c)))
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t,
@@ -69,6 +69,16 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     let ident = input.ident;
 
     let (field_idents, field_comments): (Vec<_>, Vec<_>) = fields_doc_comments.into_iter().unzip();
+
+    // quote macro needs some help with `Option`s
+    // see: https://github.com/dtolnay/quote/issues/213
+    let field_comments_tokenised: Vec<_> = field_comments
+        .into_iter()
+        .map(|opt| match opt {
+            Some(c) => quote! { Some(#c) },
+            None => quote! { None },
+        })
+        .collect();
 
     let phf_match_arms: Vec<_> = field_idents
         .into_iter()
@@ -82,7 +92,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     quote! {
         #[automatically_derived]
         impl documented::DocumentedFields for #ident {
-            const FIELD_DOCS: &'static [&'static str] = &[#(#field_comments),*];
+            const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_comments_tokenised),*];
 
             fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize> {
                 use #documented_module_path::_private_phf_reexport_for_macro as phf;

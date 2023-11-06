@@ -11,5 +11,6 @@ repository = "https://github.com/cyqsimon/documented"
 version = "0.1.2"
 
 [dependencies]
-documented-derive = {path = "../documented-derive", version = "0.1.2"}
+documented-derive = { path = "../documented-derive", version = "0.1.2" }
 phf.workspace = true
+thiserror = "1.0.50"
