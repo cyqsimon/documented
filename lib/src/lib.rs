@@ -22,7 +22,8 @@ pub trait DocumentedFields {
     const FIELD_DOCS: &'static [Option<&'static str>];
 
     /// Method internally used by `documented`.
-    fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize>;
+    #[doc(hidden)]
+    fn __documented_get_index<T: AsRef<str>>(field_name: T) -> Option<usize>;
 
     /// Get a field's documentation using its name.
     ///
@@ -30,7 +31,7 @@ pub trait DocumentedFields {
     /// method will be an empty stub and therefore not usable.
     fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
-        let index = Self::get_index_by_name(field_name)
+        let index = Self::__documented_get_index(field_name)
             .ok_or_else(|| Error::NoSuchField(field_name.into()))?;
         Self::FIELD_DOCS[index].ok_or_else(|| Error::NoDocComments(field_name.into()))
     }

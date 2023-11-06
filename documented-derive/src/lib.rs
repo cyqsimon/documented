@@ -94,7 +94,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
         impl documented::DocumentedFields for #ident {
             const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_comments_tokenised),*];
 
-            fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize> {
+            fn __documented_get_index<T: AsRef<str>>(field_name: T) -> Option<usize> {
                 use #documented_module_path::_private_phf_reexport_for_macro as phf;
 
                 static PHF: phf::Map<&'static str, usize> = phf::phf_map! {
