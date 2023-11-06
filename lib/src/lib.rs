@@ -10,13 +10,24 @@ pub trait Documented {
     const DOCS: &'static str;
 }
 
+/// Adds an associated constant `FIELD_DOCS` on your type containing the
+/// documentation of its fields, allowing you to access their documentation at
+/// runtime.
+///
+/// You can also use [`DocumentedFields::get_field_comment`] to access the
+/// fields' documentation using their names.
 pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed by
     /// field/variant order.
     const FIELD_DOCS: &'static [Option<&'static str>];
 
+    /// Method internally used by `documented`.
     fn get_index_by_name<T: AsRef<str>>(field_name: T) -> Option<usize>;
 
+    /// Get a field's documentation using its name.
+    ///
+    /// Note that for structs with anonymous fields (i.e. tuple structs), this
+    /// method will be an empty stub and therefore not usable.
     fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
         let index = Self::get_index_by_name(field_name)
