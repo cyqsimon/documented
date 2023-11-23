@@ -13,8 +13,8 @@ use documented::{Documented, DocumentedFields, Error};
 /// Multiple single-line doc comments are supported.
 ///
 /** Multi-line doc comments are supported too.
-Each line of the multi-line block is individually trimmed.
-Note the lack of spaces in front of this line.
+    Each line of the multi-line block is individually trimmed.
+    Note the lack of spaces in front of this line.
 */
 #[doc = "Attribute-style documentation is supported too."]
 #[derive(Documented, DocumentedFields)]
