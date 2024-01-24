@@ -28,6 +28,9 @@ struct BornIn69 {
     explosive: usize,
 };
 
+// `documented::Documented` usage:
+// ==================================================
+
 let doc_str = "Nice.
 Multiple single-line doc comments are supported.
 
@@ -37,6 +40,9 @@ Note the lack of spaces in front of this line.
 
 Attribute-style documentation is supported too.";
 assert_eq!(BornIn69::DOCS, doc_str);
+
+// `documented::DocumentedFields` usage:
+// ==================================================
 
 let field_doc_str = "Doc comments on fields (and enum variants) are supported too using
 the `DocumentedFields` derive macro.
