@@ -16,4 +16,4 @@ version = "0.2.0"
 [dependencies]
 documented-derive = { path = "../documented-derive", version = "0.2.0" }
 phf.workspace = true
-thiserror = "1.0.50"
+thiserror = "1.0.56"
