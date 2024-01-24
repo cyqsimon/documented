@@ -14,7 +14,7 @@ pub trait Documented {
 /// documentation of its fields, allowing you to access their documentation at
 /// runtime.
 ///
-/// You can also use [`DocumentedFields::get_field_comment`] to access the
+/// You can also use [`DocumentedFields::get_field_docs`] to access the
 /// fields' documentation using their names.
 pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed by
@@ -29,11 +29,21 @@ pub trait DocumentedFields {
     ///
     /// Note that for structs with anonymous fields (i.e. tuple structs), this
     /// method will be an empty stub and therefore not usable.
-    fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
+    fn get_field_docs<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
         let index = Self::__documented_get_index(field_name)
             .ok_or_else(|| Error::NoSuchField(field_name.into()))?;
         Self::FIELD_DOCS[index].ok_or_else(|| Error::NoDocComments(field_name.into()))
+    }
+
+    /// Deprecated alias for [`DocumentedFields::get_field_docs`].
+    #[deprecated(
+        since = "0.3.0",
+        note = "This function has an inconsistent name. Use `DocumentedFields::get_field_docs` instead."
+    )]
+    #[inline]
+    fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
+        Self::get_field_docs(field_name)
     }
 }
 

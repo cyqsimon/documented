@@ -43,13 +43,13 @@ the `DocumentedFields` derive macro.
 
 Frankly, delicious.";
 assert_eq!(BornIn69::FIELD_DOCS, [Some(field_doc_str), None]);
-assert_eq!(BornIn69::get_field_comment("rawr"), Ok(field_doc_str));
+assert_eq!(BornIn69::get_field_docs("rawr"), Ok(field_doc_str));
 assert_eq!(
-    BornIn69::get_field_comment("explosive"),
+    BornIn69::get_field_docs("explosive"),
     Err(Error::NoDocComments("explosive".to_string()))
 );
 assert_eq!(
-    BornIn69::get_field_comment("gotcha"),
+    BornIn69::get_field_docs("gotcha"),
     Err(Error::NoSuchField("gotcha".to_string()))
 );
 ```

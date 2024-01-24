@@ -13,14 +13,14 @@ fn it_works() {
     }
 
     assert_eq!(Foo::FIELD_DOCS.len(), 3);
-    assert_eq!(Foo::get_field_comment("first"), Ok("1"));
+    assert_eq!(Foo::get_field_docs("first"), Ok("1"));
     assert_eq!(
-        Foo::get_field_comment("second"),
+        Foo::get_field_docs("second"),
         Err(Error::NoDocComments("second".into()))
     );
-    assert_eq!(Foo::get_field_comment("third"), Ok("3"));
+    assert_eq!(Foo::get_field_docs("third"), Ok("3"));
     assert_eq!(
-        Foo::get_field_comment("fourth"),
+        Foo::get_field_docs("fourth"),
         Err(Error::NoSuchField("fourth".into()))
     );
 }
@@ -37,12 +37,12 @@ fn enum_works() {
 
     assert_eq!(Bar::FIELD_DOCS.len(), 2);
     assert_eq!(
-        Bar::get_field_comment("First"),
+        Bar::get_field_docs("First"),
         Err(Error::NoDocComments("First".into()))
     );
-    assert_eq!(Bar::get_field_comment("Second"), Ok("2"));
+    assert_eq!(Bar::get_field_docs("Second"), Ok("2"));
     assert_eq!(
-        Bar::get_field_comment("Third"),
+        Bar::get_field_docs("Third"),
         Err(Error::NoSuchField("Third".into()))
     );
 }
@@ -60,12 +60,12 @@ fn union_works() {
 
     assert_eq!(FooBar::FIELD_DOCS.len(), 3);
     assert_eq!(
-        FooBar::get_field_comment("first"),
+        FooBar::get_field_docs("first"),
         Err(Error::NoDocComments("first".into()))
     );
-    assert_eq!(FooBar::get_field_comment("second"), Ok("2"));
+    assert_eq!(FooBar::get_field_docs("second"), Ok("2"));
     assert_eq!(
-        FooBar::get_field_comment("third"),
+        FooBar::get_field_docs("third"),
         Err(Error::NoDocComments("third".into()))
     );
 }
