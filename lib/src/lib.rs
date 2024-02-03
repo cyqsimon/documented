@@ -28,7 +28,7 @@ pub trait DocumentedFields {
     /// Get a field's documentation using its name.
     ///
     /// Note that for structs with anonymous fields (i.e. tuple structs), this
-    /// method will be an empty stub and therefore not usable.
+    /// method will always return [`Error::NoSuchField`].
     fn get_field_docs<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
         let index = Self::__documented_get_index(field_name)
