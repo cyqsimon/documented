@@ -107,6 +107,57 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derive proc-macro for `DocumentedVariants` trait.
+#[proc_macro_derive(DocumentedVariants)]
+pub fn documented_variants(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let variants_doc_comments = {
+        let Data::Enum(DataEnum { variants, .. }) = input.data else {
+            return Error::new(
+                input.ident.span(),
+                "DocumentedVariants can only be used on enums",
+            )
+            .into_compile_error()
+            .into();
+        };
+        match variants
+            .into_iter()
+            .map(|v| (v.ident, v.attrs))
+            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c)))
+            .collect::<syn::Result<Vec<_>>>()
+        {
+            Ok(t) => t,
+            Err(e) => return e.into_compile_error().into(),
+        }
+    };
+
+    let ident = input.ident;
+
+    let match_arms: Vec<_> = variants_doc_comments
+        .into_iter()
+        .map(|(ident, c)| match c {
+            Some(comment) => quote! { Self::#ident => Ok(#comment), },
+            None => {
+                let ident_str = ident.to_string();
+                quote! { Self::#ident => Err(documented::Error::NoDocComments(#ident_str.into())), }
+            }
+        })
+        .collect();
+
+    quote! {
+        #[automatically_derived]
+        impl documented::DocumentedVariants for #ident {
+            fn get_variant_docs(&self) -> Result<&'static str, documented::Error> {
+                match self {
+                    #(#match_arms)*
+                }
+            }
+        }
+    }
+    .into()
+}
+
 fn get_comment(attrs: &[Attribute]) -> syn::Result<Option<String>> {
     let string_literals = attrs
         .iter()
