@@ -4,7 +4,7 @@ authors = [
     "Uriel <urielfontan2002@gmail.com>",
 ]
 categories = ["rust-patterns"]
-description = "Trait and derive macro for accessing your type's documentation at runtime"
+description = "Traits and derive macros for accessing your type's documentation at runtime"
 edition = "2021"
 keywords = ["documentation", "proc-macro", "reflection"]
 license = "MIT"
