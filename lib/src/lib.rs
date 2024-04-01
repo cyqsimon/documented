@@ -1,4 +1,4 @@
-pub use documented_derive::{Documented, DocumentedFields};
+pub use documented_derive::{Documented, DocumentedFields, DocumentedVariants};
 
 #[doc(hidden)]
 pub use phf as _private_phf_reexport_for_macro;
@@ -16,6 +16,8 @@ pub trait Documented {
 ///
 /// You can also use [`DocumentedFields::get_field_docs`] to access the
 /// fields' documentation using their names.
+///
+/// For enums, you may find [`DocumentedVariants`] more ergonomic to use.
 pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed by
     /// field/variant order.
@@ -45,6 +47,13 @@ pub trait DocumentedFields {
     fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         Self::get_field_docs(field_name)
     }
+}
+
+/// Adds an associated function [`DocumentedVariants::get_variant_docs`] to access
+/// the documentation on an enum variant.
+pub trait DocumentedVariants {
+    /// Get the documentation on this enum variant.
+    fn get_variant_docs(&self) -> Result<&'static str, Error>;
 }
 
 /// Errors of `documented`.

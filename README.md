@@ -58,4 +58,23 @@ assert_eq!(
     BornIn69::get_field_docs("gotcha"),
     Err(Error::NoSuchField("gotcha".to_string()))
 );
+
+// `documented::DocumentedFields` usage:
+// ==================================================
+
+#[derive(DocumentedVariants)]
+enum NeverPlay {
+    F3,
+    /// I fell out of my chair.
+    F6,
+}
+
+assert_eq!(
+    NeverPlay::F3.get_variant_docs(),
+    Err(Error::NoDocComments("F3".into()))
+);
+assert_eq!(
+    NeverPlay::F6.get_variant_docs(),
+    Ok("I fell out of my chair.")
+);
 ```
