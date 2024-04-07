@@ -4,7 +4,7 @@ edition = "2021"
 license = "MIT"
 name = "documented-derive"
 repository = "https://github.com/cyqsimon/documented"
-version = "0.4.0"
+version = "0.4.1"
 
 [lib]
 proc-macro = true
