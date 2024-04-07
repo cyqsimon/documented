@@ -115,8 +115,9 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     let variants_doc_comments = {
         let Data::Enum(DataEnum { variants, .. }) = input.data else {
             return Error::new(
-                input.ident.span(),
-                "DocumentedVariants can only be used on enums",
+                input.span(), // this targets the `struct`/`union` keyword
+                "DocumentedVariants can only be used on enums.\n\
+                For structs and unions, use DocumentedFields instead.",
             )
             .into_compile_error()
             .into();
