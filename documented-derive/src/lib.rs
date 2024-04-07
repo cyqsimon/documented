@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse_macro_input, parse_quote, spanned::Spanned, Attribute, Data, DataEnum, DataStruct,
-    DataUnion, DeriveInput, Error, Expr, ExprLit, Lit, Meta, Path,
+    DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Lit, Meta, Path,
 };
 
 fn crate_module_path() -> Path {
@@ -124,8 +124,8 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
         };
         match variants
             .into_iter()
-            .map(|v| (v.ident, v.attrs))
-            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c)))
+            .map(|v| (v.ident, v.fields, v.attrs))
+            .map(|(i, f, attrs)| get_comment(&attrs).map(|c| (i, f, c)))
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t,
@@ -137,15 +137,26 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 
     let match_arms: Vec<_> = variants_doc_comments
         .into_iter()
-        .map(|(ident, c)| match c {
-            Some(comment) => quote! { Self::#ident => Ok(#comment), },
-            None => {
-                let ident_str = ident.to_string();
-                quote! { Self::#ident => Err(documented::Error::NoDocComments(#ident_str.into())), }
+        .map(|(ident, fields, comment)| {
+            let pat = match fields {
+                Fields::Unit => quote! { Self::#ident },
+                Fields::Unnamed(_) => quote! { Self::#ident(..) },
+                Fields::Named(_) => quote! { Self::#ident{..} },
+            };
+            match comment {
+                Some(comment) => quote! { #pat => Ok(#comment), },
+                None => {
+                    let ident_str = ident.to_string();
+                    quote! { #pat => Err(documented::Error::NoDocComments(#ident_str.into())), }
+                }
             }
         })
         .collect();
 
+    // IDEA: I'd like to use phf here, but it doesn't seem to be possible at the moment,
+    // because there isn't a way to get an enum's discriminant at compile time
+    // if this becomes possible in the future, or alternatively you have a good workaround,
+    // improvement suggestions are more than welcomed
     quote! {
         #[automatically_derived]
         impl documented::DocumentedVariants for #ident {
