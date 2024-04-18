@@ -4,6 +4,7 @@ edition.workspace = true
 license.workspace = true
 name = "documented-derive"
 repository.workspace = true
+rust-version.workspace = true
 version.workspace = true
 
 [lib]
