@@ -2,6 +2,7 @@
 edition.workspace = true
 name = "documented-test"
 publish = false
+rust-version.workspace = true
 version.workspace = true
 
 [dev-dependencies]
