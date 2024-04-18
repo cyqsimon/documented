@@ -1,10 +1,10 @@
 [package]
 description = "Derive macros for `documented`"
-edition = "2021"
-license = "MIT"
+edition.workspace = true
+license.workspace = true
 name = "documented-derive"
-repository = "https://github.com/cyqsimon/documented"
-version = "0.4.1"
+repository.workspace = true
+version.workspace = true
 
 [lib]
 proc-macro = true
