@@ -87,3 +87,51 @@ fn unnamed_fields() {
     assert_eq!(Foo::FIELD_DOCS[1], Some("1"));
     assert_eq!(Foo::FIELD_DOCS[2], None);
 }
+
+#[test]
+fn generic_type_works() {
+    #[derive(DocumentedFields)]
+    #[allow(dead_code)]
+    struct Foo<T> {
+        /// foo
+        foo: T,
+    }
+
+    assert_eq!(Foo::<u8>::get_field_docs("foo"), Ok("foo"));
+}
+
+#[test]
+fn generic_type_with_bounds_works() {
+    #[derive(DocumentedFields)]
+    #[allow(dead_code)]
+    struct Foo<T: Copy> {
+        /// foo
+        foo: T,
+    }
+
+    assert_eq!(Foo::<u8>::get_field_docs("foo"), Ok("foo"));
+}
+
+#[test]
+fn const_generic_type_works() {
+    #[derive(DocumentedFields)]
+    #[allow(dead_code)]
+    struct Foo<const LEN: usize> {
+        /// foo
+        foo: [u8; LEN],
+    }
+
+    assert_eq!(Foo::<69>::get_field_docs("foo"), Ok("foo"));
+}
+
+#[test]
+fn lifetimed_type_works() {
+    #[derive(DocumentedFields)]
+    #[allow(dead_code)]
+    struct Foo<'a> {
+        /// foo
+        foo: &'a u8,
+    }
+
+    assert_eq!(Foo::get_field_docs("foo"), Ok("foo"));
+}

@@ -14,6 +14,9 @@ fn crate_module_path() -> Path {
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
+    let ident = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
     let doc_comments = match get_comment(&input.attrs) {
         Ok(Some(doc)) => doc,
         Ok(None) => {
@@ -24,11 +27,9 @@ pub fn documented(input: TokenStream) -> TokenStream {
         Err(e) => return e.into_compile_error().into(),
     };
 
-    let ident = input.ident;
-
     quote! {
         #[automatically_derived]
-        impl documented::Documented for #ident {
+        impl #impl_generics documented::Documented for #ident #ty_generics #where_clause {
             const DOCS: &'static str = #doc_comments;
         }
     }
@@ -39,6 +40,9 @@ pub fn documented(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(DocumentedFields)]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+
+    let ident = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let fields_doc_comments = {
         let fields_attrs: Vec<(Option<syn::Ident>, Vec<Attribute>)> = match input.data.clone() {
@@ -66,8 +70,6 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
         }
     };
 
-    let ident = input.ident;
-
     let (field_idents, field_comments): (Vec<_>, Vec<_>) = fields_doc_comments.into_iter().unzip();
 
     // quote macro needs some help with `Option`s
@@ -91,10 +93,10 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
     quote! {
         #[automatically_derived]
-        impl documented::DocumentedFields for #ident {
+        impl #impl_generics documented::DocumentedFields for #ident #ty_generics #where_clause {
             const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_comments_tokenised),*];
 
-            fn __documented_get_index<T: AsRef<str>>(field_name: T) -> Option<usize> {
+            fn __documented_get_index<__Documented_T: AsRef<str>>(field_name: __Documented_T) -> Option<usize> {
                 use #documented_module_path::_private_phf_reexport_for_macro as phf;
 
                 static PHF: phf::Map<&'static str, usize> = phf::phf_map! {
@@ -111,6 +113,9 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(DocumentedVariants)]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+
+    let ident = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let variants_doc_comments = {
         let Data::Enum(DataEnum { variants, .. }) = input.data else {
@@ -132,8 +137,6 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
             Err(e) => return e.into_compile_error().into(),
         }
     };
-
-    let ident = input.ident;
 
     let match_arms: Vec<_> = variants_doc_comments
         .into_iter()
@@ -159,7 +162,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     // improvement suggestions are more than welcomed
     quote! {
         #[automatically_derived]
-        impl documented::DocumentedVariants for #ident {
+        impl #impl_generics documented::DocumentedVariants for #ident #ty_generics #where_clause {
             fn get_variant_docs(&self) -> Result<&'static str, documented::Error> {
                 match self {
                     #(#match_arms)*

@@ -59,6 +59,54 @@ Note the lack of spaces in front of this line.
 Attribute-style documentation is supported too.";
         assert_eq!(BornIn69::DOCS, doc_str);
     }
+
+    #[test]
+    fn generic_type_works() {
+        /// Wow
+        #[allow(dead_code)]
+        #[derive(Documented)]
+        struct Doge<T> {
+            much: T,
+        }
+
+        assert_eq!(Doge::<u8>::DOCS, "Wow");
+    }
+
+    #[test]
+    fn generic_type_with_bounds_works() {
+        /// Wow
+        #[allow(dead_code)]
+        #[derive(Documented)]
+        struct Doge<T: Copy> {
+            much: T,
+        }
+
+        assert_eq!(Doge::<u8>::DOCS, "Wow");
+    }
+
+    #[test]
+    fn const_generic_type_works() {
+        /// Wow
+        #[allow(dead_code)]
+        #[derive(Documented)]
+        struct Doge<const LEN: usize> {
+            much: [u8; LEN],
+        }
+
+        assert_eq!(Doge::<69>::DOCS, "Wow");
+    }
+
+    #[test]
+    fn lifetimed_type_works() {
+        /// Wow
+        #[allow(dead_code)]
+        #[derive(Documented)]
+        struct Doge<'a> {
+            much: &'a str,
+        }
+
+        assert_eq!(Doge::DOCS, "Wow");
+    }
 }
 
 mod test_qualified {
