@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse_macro_input, parse_quote, spanned::Spanned, Attribute, Data, DataEnum, DataStruct,
-    DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Lit, Meta, Path,
+    DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit, Meta, Path,
 };
 
 fn crate_module_path() -> Path {
@@ -17,7 +17,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let doc_comments = match get_comment(&input.attrs) {
+    let docs = match get_docs(&input.attrs) {
         Ok(Some(doc)) => doc,
         Ok(None) => {
             return Error::new(input.ident.span(), "Missing doc comments")
@@ -30,7 +30,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
     quote! {
         #[automatically_derived]
         impl #impl_generics documented::Documented for #ident #ty_generics #where_clause {
-            const DOCS: &'static str = #doc_comments;
+            const DOCS: &'static str = #docs;
         }
     }
     .into()
@@ -44,8 +44,8 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let fields_doc_comments = {
-        let fields_attrs: Vec<(Option<syn::Ident>, Vec<Attribute>)> = match input.data.clone() {
+    let (field_idents, field_docs): (Vec<_>, Vec<_>) = {
+        let fields_attrs: Vec<(Option<Ident>, Vec<Attribute>)> = match input.data.clone() {
             Data::Enum(DataEnum { variants, .. }) => variants
                 .into_iter()
                 .map(|v| (Some(v.ident), v.attrs))
@@ -62,19 +62,17 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
         match fields_attrs
             .into_iter()
-            .map(|(i, attrs)| get_comment(&attrs).map(|c| (i, c)))
+            .map(|(i, attrs)| get_docs(&attrs).map(|d| (i, d)))
             .collect::<syn::Result<Vec<_>>>()
         {
-            Ok(t) => t,
+            Ok(t) => t.into_iter().unzip(),
             Err(e) => return e.into_compile_error().into(),
         }
     };
 
-    let (field_idents, field_comments): (Vec<_>, Vec<_>) = fields_doc_comments.into_iter().unzip();
-
     // quote macro needs some help with `Option`s
     // see: https://github.com/dtolnay/quote/issues/213
-    let field_comments_tokenised: Vec<_> = field_comments
+    let field_docs_tokenised: Vec<_> = field_docs
         .into_iter()
         .map(|opt| match opt {
             Some(c) => quote! { Some(#c) },
@@ -94,7 +92,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     quote! {
         #[automatically_derived]
         impl #impl_generics documented::DocumentedFields for #ident #ty_generics #where_clause {
-            const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_comments_tokenised),*];
+            const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_docs_tokenised),*];
 
             fn __documented_get_index<__Documented_T: AsRef<str>>(field_name: __Documented_T) -> Option<usize> {
                 use #documented_module_path::_private_phf_reexport_for_macro as phf;
@@ -117,7 +115,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let variants_doc_comments = {
+    let variants_docs = {
         let Data::Enum(DataEnum { variants, .. }) = input.data else {
             return Error::new(
                 input.span(), // this targets the `struct`/`union` keyword
@@ -130,7 +128,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
         match variants
             .into_iter()
             .map(|v| (v.ident, v.fields, v.attrs))
-            .map(|(i, f, attrs)| get_comment(&attrs).map(|c| (i, f, c)))
+            .map(|(i, f, attrs)| get_docs(&attrs).map(|d| (i, f, d)))
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t,
@@ -138,16 +136,16 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
         }
     };
 
-    let match_arms: Vec<_> = variants_doc_comments
+    let match_arms: Vec<_> = variants_docs
         .into_iter()
-        .map(|(ident, fields, comment)| {
+        .map(|(ident, fields, docs)| {
             let pat = match fields {
                 Fields::Unit => quote! { Self::#ident },
                 Fields::Unnamed(_) => quote! { Self::#ident(..) },
                 Fields::Named(_) => quote! { Self::#ident{..} },
             };
-            match comment {
-                Some(comment) => quote! { #pat => Ok(#comment), },
+            match docs {
+                Some(docs_str) => quote! { #pat => Ok(#docs_str), },
                 None => {
                     let ident_str = ident.to_string();
                     quote! { #pat => Err(documented::Error::NoDocComments(#ident_str.into())), }
@@ -173,7 +171,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     .into()
 }
 
-fn get_comment(attrs: &[Attribute]) -> syn::Result<Option<String>> {
+fn get_docs(attrs: &[Attribute]) -> syn::Result<Option<String>> {
     let string_literals = attrs
         .iter()
         .filter_map(|attr| match attr.meta {
