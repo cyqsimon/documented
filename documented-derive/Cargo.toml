@@ -11,6 +11,7 @@ version.workspace = true
 proc-macro = true
 
 [dependencies]
+optfield = "0.3.0"
 quote = "1.0.35"
 syn = "2.0.58"
 

@@ -1,9 +1,13 @@
+mod config;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse_macro_input, parse_quote, spanned::Spanned, Attribute, Data, DataEnum, DataStruct,
     DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit, Meta, Path,
 };
+
+use crate::config::{get_config_customisations, Config};
 
 fn crate_module_path() -> Path {
     parse_quote!(::documented)
@@ -37,14 +41,20 @@ fn crate_module_path() -> Path {
 /// Attribute-style documentation is supported too.";
 /// assert_eq!(BornIn69::DOCS, doc_str);
 /// ```
-#[proc_macro_derive(Documented)]
+#[proc_macro_derive(Documented, attributes(documented))]
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let docs = match get_docs(&input.attrs) {
+    let config = match get_config_customisations(&input.attrs, "documented") {
+        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
+        Ok(None) => Config::default(),
+        Err(err) => return err.into_compile_error().into(),
+    };
+
+    let docs = match get_docs(&input.attrs, &config) {
         Ok(Some(doc)) => doc,
         Ok(None) => {
             return Error::new(input.ident.span(), "Missing doc comments")
@@ -103,12 +113,19 @@ pub fn documented(input: TokenStream) -> TokenStream {
 ///     Err(Error::NoSuchField("gotcha".to_string()))
 /// );
 /// ```
-#[proc_macro_derive(DocumentedFields)]
+#[proc_macro_derive(DocumentedFields, attributes(documented_fields))]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    // `#[documented_fields(...)]` on container type
+    let base_config = match get_config_customisations(&input.attrs, "documented_fields") {
+        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
+        Ok(None) => Config::default(),
+        Err(err) => return err.into_compile_error().into(),
+    };
 
     let (field_idents, field_docs): (Vec<_>, Vec<_>) = {
         let fields_attrs: Vec<(Option<Ident>, Vec<Attribute>)> = match input.data.clone() {
@@ -128,7 +145,15 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
         match fields_attrs
             .into_iter()
-            .map(|(i, attrs)| get_docs(&attrs).map(|d| (i, d)))
+            .map(|(i, attrs)| {
+                let config =
+                    if let Some(c) = get_config_customisations(&attrs, "documented_fields")? {
+                        base_config.with_customisations(c)
+                    } else {
+                        base_config
+                    };
+                get_docs(&attrs, &config).map(|d| (i, d))
+            })
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t.into_iter().unzip(),
@@ -196,12 +221,19 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 ///     Ok("I fell out of my chair.")
 /// );
 /// ```
-#[proc_macro_derive(DocumentedVariants)]
+#[proc_macro_derive(DocumentedVariants, attributes(documented_variants))]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    // `#[documented_variants(...)]` on container type
+    let base_config = match get_config_customisations(&input.attrs, "documented_variants") {
+        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
+        Ok(None) => Config::default(),
+        Err(err) => return err.into_compile_error().into(),
+    };
 
     let variants_docs = {
         let Data::Enum(DataEnum { variants, .. }) = input.data else {
@@ -216,7 +248,15 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
         match variants
             .into_iter()
             .map(|v| (v.ident, v.fields, v.attrs))
-            .map(|(i, f, attrs)| get_docs(&attrs).map(|d| (i, f, d)))
+            .map(|(i, f, attrs)| {
+                let config =
+                    if let Some(c) = get_config_customisations(&attrs, "documented_variants")? {
+                        base_config.with_customisations(c)
+                    } else {
+                        base_config
+                    };
+                get_docs(&attrs, &config).map(|d| (i, f, d))
+            })
             .collect::<syn::Result<Vec<_>>>()
         {
             Ok(t) => t,
@@ -259,7 +299,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     .into()
 }
 
-fn get_docs(attrs: &[Attribute]) -> syn::Result<Option<String>> {
+fn get_docs(attrs: &[Attribute], config: &Config) -> syn::Result<Option<String>> {
     let string_literals = attrs
         .iter()
         .filter_map(|attr| match attr.meta {
@@ -281,11 +321,16 @@ fn get_docs(attrs: &[Attribute]) -> syn::Result<Option<String>> {
         return Ok(None);
     }
 
-    let trimmed: Vec<_> = string_literals
-        .iter()
-        .flat_map(|lit| lit.split('\n').collect::<Vec<_>>())
-        .map(|line| line.trim().to_string())
-        .collect();
+    let docs = if config.trim {
+        string_literals
+            .iter()
+            .flat_map(|lit| lit.split('\n').collect::<Vec<_>>())
+            .map(|line| line.trim().to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        string_literals.join("\n")
+    };
 
-    Ok(Some(trimmed.join("\n")))
+    Ok(Some(docs))
 }
