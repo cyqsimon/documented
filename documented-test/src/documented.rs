@@ -119,3 +119,42 @@ mod test_qualified {
         assert_eq!(<Nice as documented::Documented>::DOCS, "69");
     }
 }
+
+#[cfg(feature = "customise")]
+mod test_customise {
+    use documented::Documented;
+
+    #[test]
+    fn empty_customise_works() {
+        /** Wow
+            much
+            doge
+        */
+        #[derive(Documented)]
+        #[documented()]
+        struct Doge;
+
+        let doc_str = "Wow
+much
+doge
+";
+        assert_eq!(Doge::DOCS, doc_str);
+    }
+
+    #[test]
+    fn trim_false_works() {
+        /** Wow
+            much
+            doge
+        */
+        #[derive(Documented)]
+        #[documented(trim = false)]
+        struct Doge;
+
+        let doc_str = " Wow
+            much
+            doge
+        ";
+        assert_eq!(Doge::DOCS, doc_str);
+    }
+}

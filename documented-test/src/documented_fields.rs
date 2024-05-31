@@ -135,3 +135,70 @@ fn lifetimed_type_works() {
 
     assert_eq!(Foo::get_field_docs("foo"), Ok("foo"));
 }
+
+#[cfg(feature = "customise")]
+mod test_customise {
+    use documented::DocumentedFields;
+
+    #[test]
+    fn empty_customise_works() {
+        #[derive(DocumentedFields)]
+        #[documented_fields()]
+        #[allow(dead_code)]
+        struct Doge {
+            /// Wow, much coin
+            coin: usize,
+        }
+
+        assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
+    }
+
+    #[test]
+    fn container_customise_works() {
+        #[derive(DocumentedFields)]
+        #[documented_fields(trim = false)]
+        #[allow(dead_code)]
+        struct Doge {
+            ///     Wow, much coin
+            coin: usize,
+            ///     Wow, much doge
+            doge: bool,
+        }
+
+        assert_eq!(Doge::get_field_docs("coin"), Ok("     Wow, much coin"));
+        assert_eq!(Doge::get_field_docs("doge"), Ok("     Wow, much doge"));
+    }
+
+    #[test]
+    fn field_customise_works() {
+        #[derive(DocumentedFields)]
+        #[allow(dead_code)]
+        struct Doge {
+            ///     Wow, much coin
+            #[documented_fields(trim = false)]
+            coin: usize,
+            ///     Wow, much doge
+            doge: bool,
+        }
+
+        assert_eq!(Doge::get_field_docs("coin"), Ok("     Wow, much coin"));
+        assert_eq!(Doge::get_field_docs("doge"), Ok("Wow, much doge"));
+    }
+
+    #[test]
+    fn field_customise_override_works() {
+        #[derive(DocumentedFields)]
+        #[documented_fields(trim = false)]
+        #[allow(dead_code)]
+        struct Doge {
+            ///     Wow, much coin
+            #[documented_fields(trim = true)]
+            coin: usize,
+            ///     Wow, much doge
+            doge: bool,
+        }
+
+        assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
+        assert_eq!(Doge::get_field_docs("doge"), Ok("     Wow, much doge"));
+    }
+}
