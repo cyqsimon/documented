@@ -7,7 +7,9 @@ use syn::{
     DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit, Meta, Path,
 };
 
-use crate::config::{get_config_customisations, Config};
+#[cfg(feature = "customise")]
+use crate::config::get_config_customisations;
+use crate::config::Config;
 
 fn crate_module_path() -> Path {
     parse_quote!(::documented)
@@ -41,13 +43,20 @@ fn crate_module_path() -> Path {
 /// Attribute-style documentation is supported too.";
 /// assert_eq!(BornIn69::DOCS, doc_str);
 /// ```
-#[proc_macro_derive(Documented, attributes(documented))]
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(Documented))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(Documented, attributes(documented))
+)]
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
+    #[cfg(not(feature = "customise"))]
+    let config = Config::default();
+    #[cfg(feature = "customise")]
     let config = match get_config_customisations(&input.attrs, "documented") {
         Ok(Some(customisations)) => Config::default().with_customisations(customisations),
         Ok(None) => Config::default(),
@@ -113,7 +122,11 @@ pub fn documented(input: TokenStream) -> TokenStream {
 ///     Err(Error::NoSuchField("gotcha".to_string()))
 /// );
 /// ```
-#[proc_macro_derive(DocumentedFields, attributes(documented_fields))]
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedFields))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(DocumentedFields, attributes(documented_fields))
+)]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -121,6 +134,9 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     // `#[documented_fields(...)]` on container type
+    #[cfg(not(feature = "customise"))]
+    let base_config = Config::default();
+    #[cfg(feature = "customise")]
     let base_config = match get_config_customisations(&input.attrs, "documented_fields") {
         Ok(Some(customisations)) => Config::default().with_customisations(customisations),
         Ok(None) => Config::default(),
@@ -146,6 +162,9 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
         match fields_attrs
             .into_iter()
             .map(|(i, attrs)| {
+                #[cfg(not(feature = "customise"))]
+                let config = base_config;
+                #[cfg(feature = "customise")]
                 let config =
                     if let Some(c) = get_config_customisations(&attrs, "documented_fields")? {
                         base_config.with_customisations(c)
@@ -221,7 +240,11 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 ///     Ok("I fell out of my chair.")
 /// );
 /// ```
-#[proc_macro_derive(DocumentedVariants, attributes(documented_variants))]
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedVariants))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(DocumentedVariants, attributes(documented_variants))
+)]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -229,6 +252,9 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     // `#[documented_variants(...)]` on container type
+    #[cfg(not(feature = "customise"))]
+    let base_config = Config::default();
+    #[cfg(feature = "customise")]
     let base_config = match get_config_customisations(&input.attrs, "documented_variants") {
         Ok(Some(customisations)) => Config::default().with_customisations(customisations),
         Ok(None) => Config::default(),
@@ -249,6 +275,9 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
             .into_iter()
             .map(|v| (v.ident, v.fields, v.attrs))
             .map(|(i, f, attrs)| {
+                #[cfg(not(feature = "customise"))]
+                let config = base_config;
+                #[cfg(feature = "customise")]
                 let config =
                     if let Some(c) = get_config_customisations(&attrs, "documented_variants")? {
                         base_config.with_customisations(c)

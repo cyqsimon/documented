@@ -1,4 +1,6 @@
+#[cfg(feature = "customise")]
 use optfield::optfield;
+#[cfg(feature = "customise")]
 use syn::{
     parse::{Parse, ParseStream},
     parse2,
@@ -10,14 +12,14 @@ use syn::{
 /// Configurable options via helper attributes.
 ///
 /// Initial values are set to default.
-#[optfield(
+#[cfg_attr(feature = "customise", optfield(
     pub ConfigCustomisations,
     attrs = add(derive(Default)),
     merge_fn = pub apply_customisations,
     doc = "Parsed user-defined customisations of configurable options.\n\
     \n\
     Expected parse stream format: `<KW> = <VAL>, <KW> = <VAL>, ...`"
-)]
+))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Config {
     pub trim: bool,
@@ -35,6 +37,7 @@ impl Config {
     }
 }
 
+#[cfg(feature = "customise")]
 impl Parse for ConfigCustomisations {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?;
@@ -55,6 +58,7 @@ impl Parse for ConfigCustomisations {
     }
 }
 
+#[cfg(feature = "customise")]
 mod kw {
     use syn::custom_keyword;
 
@@ -64,6 +68,7 @@ mod kw {
 /// All known configuration options.
 ///
 /// Expected parse stream format: `<KW> = <VAL>`.
+#[cfg(feature = "customise")]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum ConfigOption {
     /// Trim each line or not.
@@ -71,6 +76,7 @@ enum ConfigOption {
     /// E.g. `trim = false`.
     Trim(kw::trim, bool),
 }
+#[cfg(feature = "customise")]
 impl Parse for ConfigOption {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
@@ -85,6 +91,7 @@ impl Parse for ConfigOption {
     }
 }
 
+#[cfg(feature = "customise")]
 pub fn get_config_customisations(
     attrs: &[Attribute],
     attr_name: &str,
