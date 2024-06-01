@@ -27,23 +27,11 @@ assert_eq!(
     [None, Some("But only if you are white.")]
 );
 assert_eq!(
-    AlwaysPlay::get_field_docs("Kb1"),
-    Err(Error::NoDocComments("Kb1".to_string()))
-);
-assert_eq!(
     AlwaysPlay::get_field_docs("F6"),
     Ok("But only if you are white.")
 );
-assert_eq!(
-    AlwaysPlay::get_field_docs("Bf1"),
-    Err(Error::NoSuchField("Bf1".to_string()))
-);
 
 // DocumentedVariants
-assert_eq!(
-    AlwaysPlay::Kb1.get_variant_docs(),
-    Err(Error::NoDocComments("Kb1".to_string()))
-);
 assert_eq!(
     AlwaysPlay::F6.get_variant_docs(),
     Ok("But only if you are white.")
