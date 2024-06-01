@@ -111,3 +111,73 @@ fn works_on_lifetimed_enums() {
     assert_eq!(Foo::Rufus(&69).get_variant_docs(), Ok("600"));
     assert_eq!(Foo::Dufus(69, &420).get_variant_docs(), Ok("599"));
 }
+
+#[cfg(feature = "customise")]
+mod test_customise {
+    use documented::DocumentedVariants;
+
+    #[test]
+    fn empty_customise_works() {
+        #[derive(DocumentedVariants)]
+        #[documented_variants()]
+        #[allow(dead_code)]
+        enum Name {
+            /// Wow
+            Doge,
+            /// RIP
+            Kabuso,
+        }
+
+        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
+        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+    }
+
+    #[test]
+    fn container_customise_works() {
+        #[derive(DocumentedVariants)]
+        #[documented_variants(trim = false)]
+        #[allow(dead_code)]
+        enum Name {
+            ///     Wow
+            Doge,
+            ///     RIP
+            Kabuso,
+        }
+
+        assert_eq!(Name::Doge.get_variant_docs(), Ok("     Wow"));
+        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("     RIP"));
+    }
+
+    #[test]
+    fn field_customise_works() {
+        #[derive(DocumentedVariants)]
+        #[allow(dead_code)]
+        enum Name {
+            ///     Wow
+            #[documented_variants(trim = false)]
+            Doge,
+            ///     RIP
+            Kabuso,
+        }
+
+        assert_eq!(Name::Doge.get_variant_docs(), Ok("     Wow"));
+        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+    }
+
+    #[test]
+    fn field_customise_override_works() {
+        #[derive(DocumentedVariants)]
+        #[documented_variants(trim = false)]
+        #[allow(dead_code)]
+        enum Name {
+            ///     Wow
+            #[documented_variants(trim = true)]
+            Doge,
+            ///     RIP
+            Kabuso,
+        }
+
+        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
+        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("     RIP"));
+    }
+}
