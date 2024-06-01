@@ -43,6 +43,26 @@ fn crate_module_path() -> Path {
 /// Attribute-style documentation is supported too.";
 /// assert_eq!(BornIn69::DOCS, doc_str);
 /// ```
+///
+/// # Configuration
+///
+/// With the `customise` feature enabled, you can customise this macro's
+/// behaviour using the `#[documented(...)]` attribute.
+///
+/// Currently, you can disable line-trimming like so:
+///
+/// ```rust
+/// # use documented::Documented;
+/// ///     Terrible.
+/// #[derive(Documented)]
+/// #[documented(trim = false)]
+/// struct Frankly;
+///
+/// assert_eq!(Frankly::DOCS, "     Terrible.");
+/// ```
+///
+/// If there are other configuration options you wish to have, please submit an
+/// issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(Documented))]
 #[cfg_attr(
     feature = "customise",
@@ -91,12 +111,12 @@ pub fn documented(input: TokenStream) -> TokenStream {
 ///
 /// #[derive(DocumentedFields)]
 /// struct BornIn69 {
-///     /// Frankly, delicious.
+///     /// Cry like a grandmaster.
 ///     rawr: String,
 ///     explosive: usize,
 /// };
 ///
-/// assert_eq!(BornIn69::FIELD_DOCS, [Some("Frankly, delicious."), None]);
+/// assert_eq!(BornIn69::FIELD_DOCS, [Some("Cry like a grandmaster."), None]);
 /// ```
 ///
 /// You can also use [`get_field_docs`](Self::get_field_docs) to access the
@@ -107,12 +127,12 @@ pub fn documented(input: TokenStream) -> TokenStream {
 /// #
 /// # #[derive(DocumentedFields)]
 /// # struct BornIn69 {
-/// #     /// Frankly, delicious.
+/// #     /// Cry like a grandmaster.
 /// #     rawr: String,
 /// #     explosive: usize,
 /// # };
 /// #
-/// assert_eq!(BornIn69::get_field_docs("rawr"), Ok("Frankly, delicious."));
+/// assert_eq!(BornIn69::get_field_docs("rawr"), Ok("Cry like a grandmaster."));
 /// assert_eq!(
 ///     BornIn69::get_field_docs("explosive"),
 ///     Err(Error::NoDocComments("explosive".to_string()))
@@ -122,6 +142,34 @@ pub fn documented(input: TokenStream) -> TokenStream {
 ///     Err(Error::NoSuchField("gotcha".to_string()))
 /// );
 /// ```
+///
+/// # Configuration
+///
+/// With the `customise` feature enabled, you can customise this macro's
+/// behaviour using the `#[documented_fields(...)]` attribute. Note that this
+/// attribute works on both the container and each individual field, with the
+/// per-field configurations overriding container configurations, which
+/// override the default.
+///
+/// Currently, you can (selectively) disable line-trimming like so:
+///
+/// ```rust
+/// # use documented::DocumentedFields;
+/// #[derive(DocumentedFields)]
+/// #[documented_fields(trim = false)]
+/// struct Frankly {
+///     ///     Delicious.
+///     perrier: usize,
+///     ///     I'm vegan.
+///     #[documented_fields(trim = true)]
+///     fried_liver: bool,
+/// }
+///
+/// assert_eq!(Frankly::FIELD_DOCS, [Some("     Delicious."), Some("I'm vegan.")]);
+/// ```
+///
+/// If there are other configuration options you wish to have, please
+/// submit an issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedFields))]
 #[cfg_attr(
     feature = "customise",
@@ -240,6 +288,37 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 ///     Ok("I fell out of my chair.")
 /// );
 /// ```
+///
+/// # Configuration
+///
+/// With the `customise` feature enabled, you can customise this macro's
+/// behaviour using the `#[documented_variants(...)]` attribute. Note that this
+/// attribute works on both the container and each individual variant, with the
+/// per-variant configurations overriding container configurations, which
+/// override the default.
+///
+/// Currently, you can (selectively) disable line-trimming like so:
+///
+/// ```rust
+/// # use documented::DocumentedVariants;
+/// #[derive(DocumentedVariants)]
+/// #[documented_variants(trim = false)]
+/// enum Always {
+///     ///     Or the quality.
+///     SacTheExchange,
+///     ///     Like a Frenchman.
+///     #[documented_variants(trim = true)]
+///     Retreat,
+/// }
+/// assert_eq!(
+///     Always::SacTheExchange.get_variant_docs(),
+///     Ok("     Or the quality.")
+/// );
+/// assert_eq!(Always::Retreat.get_variant_docs(), Ok("Like a Frenchman."));
+/// ```
+///
+/// If there are other configuration options you wish to have, please
+/// submit an issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedVariants))]
 #[cfg_attr(
     feature = "customise",
