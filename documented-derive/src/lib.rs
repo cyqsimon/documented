@@ -10,6 +10,33 @@ fn crate_module_path() -> Path {
 }
 
 /// Derive proc-macro for `Documented` trait.
+///
+/// # Example
+///
+/// ```rust
+/// use documented::Documented;
+///
+/// /// Nice.
+/// /// Multiple single-line doc comments are supported.
+/// ///
+/// /** Multi-line doc comments are supported too.
+///     Each line of the multi-line block is individually trimmed by default.
+///     Note the lack of spaces in front of this line.
+/// */
+/// #[doc = "Attribute-style documentation is supported too."]
+/// #[derive(Documented)]
+/// struct BornIn69;
+///
+/// let doc_str = "Nice.
+/// Multiple single-line doc comments are supported.
+///
+/// Multi-line doc comments are supported too.
+/// Each line of the multi-line block is individually trimmed by default.
+/// Note the lack of spaces in front of this line.
+///
+/// Attribute-style documentation is supported too.";
+/// assert_eq!(BornIn69::DOCS, doc_str);
+/// ```
 #[proc_macro_derive(Documented)]
 pub fn documented(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -37,6 +64,45 @@ pub fn documented(input: TokenStream) -> TokenStream {
 }
 
 /// Derive proc-macro for `DocumentedFields` trait.
+///
+/// # Example
+///
+/// ```rust
+/// use documented::DocumentedFields;
+///
+/// #[derive(DocumentedFields)]
+/// struct BornIn69 {
+///     /// Frankly, delicious.
+///     rawr: String,
+///     explosive: usize,
+/// };
+///
+/// assert_eq!(BornIn69::FIELD_DOCS, [Some("Frankly, delicious."), None]);
+/// ```
+///
+/// You can also use [`get_field_docs`](Self::get_field_docs) to access the
+/// fields' documentation using their names.
+///
+/// ```rust
+/// # use documented::{DocumentedFields, Error};
+/// #
+/// # #[derive(DocumentedFields)]
+/// # struct BornIn69 {
+/// #     /// Frankly, delicious.
+/// #     rawr: String,
+/// #     explosive: usize,
+/// # };
+/// #
+/// assert_eq!(BornIn69::get_field_docs("rawr"), Ok("Frankly, delicious."));
+/// assert_eq!(
+///     BornIn69::get_field_docs("explosive"),
+///     Err(Error::NoDocComments("explosive".to_string()))
+/// );
+/// assert_eq!(
+///     BornIn69::get_field_docs("gotcha"),
+///     Err(Error::NoSuchField("gotcha".to_string()))
+/// );
+/// ```
 #[proc_macro_derive(DocumentedFields)]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -108,6 +174,28 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 }
 
 /// Derive proc-macro for `DocumentedVariants` trait.
+///
+/// # Example
+///
+/// ```rust
+/// use documented::{DocumentedVariants, Error};
+///
+/// #[derive(DocumentedVariants)]
+/// enum NeverPlay {
+///     F3,
+///     /// I fell out of my chair.
+///     F6,
+/// }
+///
+/// assert_eq!(
+///     NeverPlay::F3.get_variant_docs(),
+///     Err(Error::NoDocComments("F3".into()))
+/// );
+/// assert_eq!(
+///     NeverPlay::F6.get_variant_docs(),
+///     Ok("I fell out of my chair.")
+/// );
+/// ```
 #[proc_macro_derive(DocumentedVariants)]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

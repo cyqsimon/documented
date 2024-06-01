@@ -6,83 +6,20 @@ pub use phf as _private_phf_reexport_for_macro;
 /// Adds an associated constant [`DOCS`](Self::DOCS) on your type containing its
 /// documentation, allowing you to access its documentation at runtime.
 ///
-/// # Example
-///
-/// ```rust
-/// use documented::Documented;
-///
-/// /// Nice.
-/// /// Multiple single-line doc comments are supported.
-/// ///
-/// /** Multi-line doc comments are supported too.
-///     Each line of the multi-line block is individually trimmed.
-///     Note the lack of spaces in front of this line.
-/// */
-/// #[doc = "Attribute-style documentation is supported too."]
-/// #[derive(Documented)]
-/// struct BornIn69;
-///
-/// let doc_str = "Nice.
-/// Multiple single-line doc comments are supported.
-///
-/// Multi-line doc comments are supported too.
-/// Each line of the multi-line block is individually trimmed.
-/// Note the lack of spaces in front of this line.
-///
-/// Attribute-style documentation is supported too.";
-/// assert_eq!(BornIn69::DOCS, doc_str);
-/// ```
+/// For how to use the derive macro, see [`macro@Documented`].
 pub trait Documented {
     /// The static doc comments on this type.
     const DOCS: &'static str;
 }
 
-/// Adds an associated constant `FIELD_DOCS` on your type containing the
-/// documentation of its fields, allowing you to access their documentation at
-/// runtime.
+/// Adds an associated constant [`FIELD_DOCS`](Self::FIELD_DOCS) on your type
+/// containing the documentation of its fields, allowing you to access their
+/// documentation at runtime.
 ///
 /// This trait and associated derive macro works on structs, enums, and unions.
-///
-/// # Example
-///
-/// ```rust
-/// use documented::DocumentedFields;
-///
-/// #[derive(DocumentedFields)]
-/// struct BornIn69 {
-///     /// Frankly, delicious.
-///     rawr: String,
-///     explosive: usize,
-/// };
-///
-/// assert_eq!(BornIn69::FIELD_DOCS, [Some("Frankly, delicious."), None]);
-/// ```
-///
-/// You can also use [`get_field_docs`](Self::get_field_docs) to access the
-/// fields' documentation using their names.
-///
-/// ```rust
-/// # use documented::{DocumentedFields, Error};
-/// #
-/// # #[derive(DocumentedFields)]
-/// # struct BornIn69 {
-/// #     /// Frankly, delicious.
-/// #     rawr: String,
-/// #     explosive: usize,
-/// # };
-/// #
-/// assert_eq!(BornIn69::get_field_docs("rawr"), Ok("Frankly, delicious."));
-/// assert_eq!(
-///     BornIn69::get_field_docs("explosive"),
-///     Err(Error::NoDocComments("explosive".to_string()))
-/// );
-/// assert_eq!(
-///     BornIn69::get_field_docs("gotcha"),
-///     Err(Error::NoSuchField("gotcha".to_string()))
-/// );
-/// ```
-///
 /// For enums, you may find [`DocumentedVariants`] more ergonomic to use.
+///
+/// For how to use the derive macro, see [`macro@DocumentedFields`].
 pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed
     /// by field/variant order.
@@ -121,27 +58,7 @@ pub trait DocumentedFields {
 /// This trait and associated derive macro works on enums only. For structs and
 /// unions, use [`DocumentedFields`] instead.
 ///
-/// # Example
-///
-/// ```rust
-/// use documented::{DocumentedVariants, Error};
-///
-/// #[derive(DocumentedVariants)]
-/// enum NeverPlay {
-///     F3,
-///     /// I fell out of my chair.
-///     F6,
-/// }
-///
-/// assert_eq!(
-///     NeverPlay::F3.get_variant_docs(),
-///     Err(Error::NoDocComments("F3".into()))
-/// );
-/// assert_eq!(
-///     NeverPlay::F6.get_variant_docs(),
-///     Ok("I fell out of my chair.")
-/// );
-/// ```
+/// For how to use the derive macro, see [`macro@DocumentedVariants`].
 pub trait DocumentedVariants {
     /// Get the documentation on this enum variant.
     fn get_variant_docs(&self) -> Result<&'static str, Error>;
