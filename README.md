@@ -8,7 +8,7 @@ Traits and derive macros for accessing your type's documentation at runtime
 ## Quick start
 
 ```rust
-use documented::{Documented, DocumentedFields, DocumentedVariants, Error};
+use documented::{Documented, DocumentedFields, DocumentedVariants};
 
 /// Trying is the first step to failure.
 #[derive(Documented, DocumentedFields, DocumentedVariants)]
