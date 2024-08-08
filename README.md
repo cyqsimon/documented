@@ -13,6 +13,7 @@ use documented::{Documented, DocumentedFields, DocumentedVariants};
 /// Trying is the first step to failure.
 #[derive(Documented, DocumentedFields, DocumentedVariants)]
 enum AlwaysPlay {
+    #[allow(dead_code)]
     Kb1,
     /// But only if you are white.
     F6,

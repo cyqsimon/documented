@@ -6,3 +6,6 @@ mod documented_fields;
 
 #[cfg(test)]
 mod documented_variants;
+
+#[cfg(test)]
+mod readme;
