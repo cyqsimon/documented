@@ -8,4 +8,7 @@ mod documented_fields;
 mod documented_variants;
 
 #[cfg(test)]
+mod documented_function;
+
+#[cfg(test)]
 mod readme;

@@ -1,4 +1,4 @@
-pub use documented_derive::{Documented, DocumentedFields, DocumentedVariants};
+pub use documented_derive::{Documented, DocumentedFields, DocumentedVariants, documented_function};
 
 #[doc(hidden)]
 pub use phf as _private_phf_reexport_for_macro;

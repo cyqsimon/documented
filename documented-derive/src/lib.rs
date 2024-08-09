@@ -442,3 +442,50 @@ fn get_docs(attrs: &[Attribute], config: &Config) -> syn::Result<Option<String>>
 
     Ok(Some(docs))
 }
+
+/// Also adds a macro to extract the docs from a function.
+/// WIP!
+#[proc_macro_attribute]
+pub fn documented_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    // We ignore the attribute for now, but we should probably warn the user that it's not used
+    //TODO: Add a warning if the attribute is not used
+
+    // The item is a function, so we parse it as such
+    let item = syn::parse_macro_input!(item as syn::ItemFn);
+
+    // The docstring should be part of the function's attributes
+    let attrs = &item.attrs;
+
+    // We get the docs from the attributes
+    let docs = match get_docs(attrs, &Config::default()) {
+        Ok(Some(docs)) => docs,
+        Ok(None) => {
+            return Error::new(item.sig.span(), "Missing doc comments")
+                .into_compile_error()
+                .into()
+        }
+        Err(e) => return e.into_compile_error().into(),
+    };
+
+    // Now we want to keep the function the way it is, but also, after the function, 
+    // insert a const variable with the docs
+
+    let doc_var_name = format!("{}_docs", item.sig.ident);
+    
+    let doc_var_ident = Ident::new(&doc_var_name, item.sig.ident.span());
+
+    let doc_var_vis = &item.vis;
+
+    let doc_var = quote! {
+        #[allow(non_upper_case_globals)]
+        #doc_var_vis const #doc_var_ident: &'static str = #docs;
+    };
+
+    // We return the function as is, but with the docs variable added
+    let function = quote! {
+        #item
+        #doc_var
+    };
+
+    function.into()
+}
