@@ -467,11 +467,11 @@ pub fn documented_function(_attr: TokenStream, item: TokenStream) -> TokenStream
         Err(e) => return e.into_compile_error().into(),
     };
 
-    // Now we want to keep the function the way it is, but also, after the function, 
+    // Now we want to keep the function the way it is, but also, after the function,
     // insert a const variable with the docs
 
     let doc_var_name = format!("{}_docs", item.sig.ident);
-    
+
     let doc_var_ident = Ident::new(&doc_var_name, item.sig.ident.span());
 
     let doc_var_vis = &item.vis;
