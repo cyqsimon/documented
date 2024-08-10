@@ -444,12 +444,38 @@ fn get_docs(attrs: &[Attribute], config: &Config) -> syn::Result<Option<String>>
     Ok(Some(docs))
 }
 
-/// Also adds a macro to extract the docs from a function.
-/// WIP!
+/// Macro to extract the documentation of a function and store it in a const variable.
+/// # Examples
+///
+/// ```rust
+/// use documented::documented_function;
+///
+/// /// This is a test function
+/// #[documented_function]
+/// fn test_fn() {}
+///
+/// assert_eq!(TEST_FN_DOCS, "This is a test function");
+/// ```
+///
+/// # Configuration
+///
+/// With the `customise` feature enabled, you can customise this macro's behaviour using the `#[documented_function(...)]` attribute.
+/// Currently, you can disable line-trimming like so:
+///
+/// ```rust
+/// use documented::documented_function;
+///
+/// ///     This is a test function
+/// #[documented_function(trim = false)]
+/// fn test_fn() {}
+///
+/// assert_eq!(TEST_FN_DOCS, "     This is a test function");
+/// ```
+///
+/// If there are other configuration options you wish to have, please
+/// submit an issue or a PR.
 #[proc_macro_attribute]
 pub fn documented_function(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // We ignore the attribute for now, but we should probably warn the user that it's not used
-
     // The item is a function, so we parse it as such
     let item = syn::parse_macro_input!(item as syn::ItemFn);
 
