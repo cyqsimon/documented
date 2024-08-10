@@ -59,3 +59,25 @@ fn generics_and_lifetime_works() {
 
     assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
+
+#[test]
+fn trim_works() {
+    ///           This is a test function        
+    ///        Test Trim
+    #[documented_function(trim = true)] // technically redundant, as it's the default
+    #[allow(dead_code)]
+    fn test_fn() {}
+
+    assert_eq!(TEST_FN_DOCS, "This is a test function\nTest Trim");
+}
+
+#[test]
+fn no_trim_works() {
+    ///           This is a test function        
+    ///        Test Trim
+    #[documented_function(trim = false)]
+    #[allow(dead_code)]
+    fn test_fn() {}
+
+    assert_eq!(TEST_FN_DOCS, "           This is a test function        \n        Test Trim"); // The whitespace is preserved, even on the end of the first line
+}

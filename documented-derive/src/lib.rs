@@ -1,5 +1,6 @@
 mod config;
 
+use config::ConfigCustomisations;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
@@ -446,18 +447,23 @@ fn get_docs(attrs: &[Attribute], config: &Config) -> syn::Result<Option<String>>
 /// Also adds a macro to extract the docs from a function.
 /// WIP!
 #[proc_macro_attribute]
-pub fn documented_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn documented_function(attr: TokenStream, item: TokenStream) -> TokenStream {
     // We ignore the attribute for now, but we should probably warn the user that it's not used
-    //TODO: Add a warning if the attribute is not used
 
     // The item is a function, so we parse it as such
     let item = syn::parse_macro_input!(item as syn::ItemFn);
+
+    #[cfg(not(feature = "customise"))]
+    let base_config = Config::default();
+    #[cfg(feature = "customise")]
+    let base_config = Config::default()
+        .with_customisations(syn::parse_macro_input!(attr as ConfigCustomisations));
 
     // The docstring should be part of the function's attributes
     let attrs = &item.attrs;
 
     // We get the docs from the attributes
-    let docs = match get_docs(attrs, &Config::default()) {
+    let docs = match get_docs(attrs, &base_config) {
         Ok(Some(docs)) => docs,
         Ok(None) => {
             return Error::new(item.sig.span(), "Missing doc comments")
