@@ -470,7 +470,7 @@ pub fn documented_function(_attr: TokenStream, item: TokenStream) -> TokenStream
     // Now we want to keep the function the way it is, but also, after the function,
     // insert a const variable with the docs
 
-    let doc_var_name = format!("{}_docs", item.sig.ident);
+    let doc_var_name = format!("{}_DOCS", item.sig.ident.to_string().to_uppercase()); // converts case to SCREAMING_SNAKE_CASE
 
     let doc_var_ident = Ident::new(&doc_var_name, item.sig.ident.span());
 

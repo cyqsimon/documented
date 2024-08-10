@@ -7,7 +7,7 @@ fn it_works() {
     #[allow(dead_code)]
     fn test_fn() {}
 
-    assert_eq!(test_fn_docs, "This is a test function");
+    assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
 
 // Note: I found no way to test whether the visibility of the function is preserved.
@@ -22,7 +22,7 @@ fn different_docs_work() {
     #[allow(dead_code)]
     fn test_fn() {}
 
-    assert_eq!(test_fn_docs, "This is a test function\nThis is the second line of the doc\nThis is the third line of the doc");
+    assert_eq!(TEST_FN_DOCS, "This is a test function\nThis is the second line of the doc\nThis is the third line of the doc");
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn parameters_work() {
     #[allow(dead_code)]
     fn test_fn(_test: String) {}
 
-    assert_eq!(test_fn_docs, "This is a test function");
+    assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn return_and_body_works() {
         input.to_ascii_lowercase()
     }
 
-    assert_eq!(test_fn_docs, "This is a test function");
+    assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
 
 #[test]
@@ -57,5 +57,5 @@ fn generics_and_lifetime_works() {
         input
     }
 
-    assert_eq!(test_fn_docs, "This is a test function");
+    assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
