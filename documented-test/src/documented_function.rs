@@ -79,5 +79,8 @@ fn no_trim_works() {
     #[allow(dead_code)]
     fn test_fn() {}
 
-    assert_eq!(TEST_FN_DOCS, "           This is a test function        \n        Test Trim"); // The whitespace is preserved, even on the end of the first line
+    assert_eq!(
+        TEST_FN_DOCS,
+        "           This is a test function        \n        Test Trim"
+    ); // The whitespace is preserved, even on the end of the first line
 }
