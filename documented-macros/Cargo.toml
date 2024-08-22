@@ -1,8 +1,8 @@
 [package]
-description = "Derive macros for `documented`"
+description = "Derive and attribute macros for `documented`"
 edition.workspace = true
 license.workspace = true
-name = "documented-derive"
+name = "documented-macros"
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true

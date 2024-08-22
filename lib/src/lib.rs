@@ -1,4 +1,4 @@
-pub use documented_derive::{
+pub use documented_macros::{
     documented_function, Documented, DocumentedFields, DocumentedVariants,
 };
 

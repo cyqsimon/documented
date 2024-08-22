@@ -1,6 +1,6 @@
 # documented
 
-Traits and derive macros for accessing your type's documentation at runtime
+Derive and attribute macros for accessing your type's documentation at runtime
 
 - [crates.io](https://crates.io/crates/documented)
 - [docs.rs](https://docs.rs/documented/latest/documented/)
