@@ -1,0 +1,1 @@
+mod documented_function;
