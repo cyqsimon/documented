@@ -51,12 +51,13 @@ impl Parse for DeriveCustomisations {
         let mut config = Self::default();
         for arg in args {
             match arg {
-                O::Name(kw, _) => Err(Error::new(
-                    kw.span(),
+                O::Vis(..) | O::Name(..) => Err(Error::new(
+                    arg.kw_span(),
                     "This config option is not applicable to derive macros",
                 ))?,
-                O::Trim(kw, _) if config.trim.is_some() => Err(Error::new(
-                    kw.span(),
+
+                O::Trim(..) if config.trim.is_some() => Err(Error::new(
+                    arg.kw_span(),
                     "This config option cannot be specified more than once",
                 ))?,
                 O::Trim(_, val) => {

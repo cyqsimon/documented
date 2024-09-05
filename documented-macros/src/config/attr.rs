@@ -1,10 +1,10 @@
 #[cfg(feature = "customise")]
 use optfield::optfield;
+use syn::Visibility;
 #[cfg(feature = "customise")]
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    spanned::Spanned,
     Error, Token,
 };
 
@@ -26,12 +26,17 @@ use crate::config::customise_core::ConfigOption;
 pub struct AttrConfig {
     // optfield does not rewrap `Option` by default, which is the desired behavior
     // see https://docs.rs/optfield/latest/optfield/#rewrapping-option-fields
+    pub custom_vis: Option<Visibility>,
     pub custom_name: Option<String>,
     pub trim: bool,
 }
 impl Default for AttrConfig {
     fn default() -> Self {
-        Self { custom_name: None, trim: true }
+        Self {
+            custom_vis: None,
+            custom_name: None,
+            trim: true,
+        }
     }
 }
 #[cfg(feature = "customise")]
@@ -48,20 +53,31 @@ impl Parse for AttrCustomisations {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         use ConfigOption as O;
 
-        let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?;
-
         let mut config = Self::default();
+
+        let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?;
         for arg in args {
+            // I'd love to macro this if declarative macros can expand to a full match arm,
+            // but no: https://github.com/rust-lang/rfcs/issues/2654
             match arg {
-                O::Name(kw, _) if config.custom_name.is_some() => Err(Error::new(
-                    kw.span(),
+                O::Vis(..) if config.custom_vis.is_some() => Err(Error::new(
+                    arg.kw_span(),
+                    "This config option cannot be specified more than once",
+                ))?,
+                O::Vis(_, val) => {
+                    config.custom_vis.replace(val);
+                }
+
+                O::Name(..) if config.custom_name.is_some() => Err(Error::new(
+                    arg.kw_span(),
                     "This config option cannot be specified more than once",
                 ))?,
                 O::Name(_, val) => {
                     config.custom_name.replace(val);
                 }
-                O::Trim(kw, _) if config.trim.is_some() => Err(Error::new(
-                    kw.span(),
+
+                O::Trim(..) if config.trim.is_some() => Err(Error::new(
+                    arg.kw_span(),
                     "This config option cannot be specified more than once",
                 ))?,
                 O::Trim(_, val) => {

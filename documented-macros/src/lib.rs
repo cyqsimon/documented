@@ -488,6 +488,7 @@ pub fn docs_const(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return e.into_compile_error().into(),
     };
 
+    let const_vis = config.custom_vis.unwrap_or(item_vis);
     let const_name = config.custom_name.unwrap_or_else(|| {
         // SCREAMING_SNAKE_CASE by default
         format!("{}_DOCS", item_name.to_uppercase())
@@ -495,10 +496,9 @@ pub fn docs_const(attr: TokenStream, item: TokenStream) -> TokenStream {
     let const_ident = Ident::new(&const_name, Span::call_site());
 
     // insert a const after the docs
-    // IDEA: customisation: vis
     quote! {
         #item
-        #item_vis const #const_ident: &'static str = #docs;
+        #const_vis const #const_ident: &'static str = #docs;
     }
     .into()
 }

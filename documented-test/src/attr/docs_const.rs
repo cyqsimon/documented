@@ -30,6 +30,20 @@ mod test_customise {
     use documented::docs_const;
 
     #[test]
+    fn custom_visibility_works() {
+        mod class {
+            use documented::docs_const;
+
+            #[docs_const(vis = pub)]
+            #[allow(dead_code)]
+            /// Arjun!
+            trait RandomStudent {}
+        }
+
+        assert_eq!(class::RANDOMSTUDENT_DOCS, "Arjun!");
+    }
+
+    #[test]
     fn rename_works() {
         /// Suspicious
         #[docs_const(name = "NEVER_PLAY_F6")]

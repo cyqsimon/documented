@@ -1,11 +1,14 @@
+use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
-    LitBool, LitStr, Token,
+    spanned::Spanned,
+    LitBool, LitStr, Token, Visibility,
 };
 
 mod kw {
     use syn::custom_keyword;
 
+    custom_keyword!(vis);
     custom_keyword!(name);
     custom_keyword!(trim);
 }
@@ -16,6 +19,11 @@ mod kw {
 /// Expected parse stream format: `<KW> = <VAL>`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ConfigOption {
+    /// Custom visibility for the generated constant.
+    ///
+    /// E.g. `vis = pub(crate)`
+    Vis(kw::vis, Visibility),
+
     /// Custom name for generated constant.
     ///
     /// E.g. `name = "CUSTOM_NAME_DOCS"`
@@ -30,7 +38,12 @@ impl Parse for ConfigOption {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
 
-        if lookahead.peek(kw::name) {
+        if lookahead.peek(kw::vis) {
+            let kw = input.parse::<kw::vis>()?;
+            input.parse::<Token![=]>()?;
+            let vis = input.parse::<Visibility>()?;
+            Ok(Self::Vis(kw, vis))
+        } else if lookahead.peek(kw::name) {
             let kw = input.parse()?;
             input.parse::<Token![=]>()?;
             let name = input.parse::<LitStr>()?;
@@ -42,6 +55,15 @@ impl Parse for ConfigOption {
             Ok(Self::Trim(kw, trim.value))
         } else {
             Err(lookahead.error())
+        }
+    }
+}
+impl ConfigOption {
+    pub fn kw_span(&self) -> Span {
+        match self {
+            Self::Vis(kw, _) => kw.span(),
+            Self::Name(kw, _) => kw.span(),
+            Self::Trim(kw, _) => kw.span(),
         }
     }
 }
