@@ -432,7 +432,22 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 ///
 /// Currently, you can:
 ///
-/// ## 1. set a custom constant name like so:
+/// ## 1. set a custom constant visibility like so:
+///
+/// ```rust
+/// mod submodule {
+///     use documented::docs_const;
+///     
+///     /// Boo!
+///     #[docs_const(vis = pub)]
+///     struct Wooooo;
+/// }
+///
+/// // notice how the constant can be seen from outside
+/// assert_eq!(submodule::WOOOOO_DOCS, "Boo!");
+/// ```
+///
+/// ## 2. set a custom constant name like so:
 ///
 /// ```rust
 /// use documented::docs_const;
@@ -444,7 +459,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
 /// ```
 ///
-/// ## 2. disable line-trimming like so:
+/// ## 3. disable line-trimming like so:
 ///
 /// ```rust
 /// use documented::docs_const;
