@@ -1,6 +1,7 @@
 mod config;
 pub(crate) mod util;
 
+use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
@@ -489,10 +490,9 @@ pub fn docs_const(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let const_vis = config.custom_vis.unwrap_or(item_vis);
-    let const_name = config.custom_name.unwrap_or_else(|| {
-        // SCREAMING_SNAKE_CASE by default
-        format!("{}_DOCS", item_name.to_uppercase())
-    });
+    let const_name = config
+        .custom_name
+        .unwrap_or_else(|| format!("{}_DOCS", item_name.to_case(Case::ScreamingSnake)));
     let const_ident = Ident::new(&const_name, Span::call_site());
 
     // insert a const after the docs

@@ -40,7 +40,7 @@ mod test_customise {
             trait RandomStudent {}
         }
 
-        assert_eq!(class::RANDOMSTUDENT_DOCS, "Arjun!");
+        assert_eq!(class::RANDOM_STUDENT_DOCS, "Arjun!");
     }
 
     #[test]
