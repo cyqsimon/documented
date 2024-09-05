@@ -450,7 +450,6 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 ///
 /// ///     This is a test constant
 /// #[docs_const(trim = false)]
-/// fn test_fn() {}
 /// const test_const: u8 = 0;
 ///
 /// assert_eq!(TEST_CONST_DOCS, "     This is a test constant");
