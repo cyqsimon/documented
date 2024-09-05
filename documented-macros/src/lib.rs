@@ -1,19 +1,21 @@
 mod config;
+pub(crate) mod util;
 
+use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::quote;
 use syn::{
-    parse_macro_input, parse_quote, spanned::Spanned, Attribute, Data, DataEnum, DataStruct,
-    DataUnion, DeriveInput, Error, Expr, ExprLit, Fields, Ident, Lit, Meta, Path,
+    parse_macro_input, spanned::Spanned, Attribute, Data, DataEnum, DataStruct, DataUnion,
+    DeriveInput, Error, Fields, Ident, Item,
 };
 
 #[cfg(feature = "customise")]
-use crate::config::get_config_customisations;
-use crate::config::Config;
-
-fn crate_module_path() -> Path {
-    parse_quote!(::documented)
-}
+use crate::config::{attr::AttrCustomisations, derive::get_customisations_from_attrs};
+use crate::{
+    config::{attr::AttrConfig, derive::DeriveConfig},
+    util::{crate_module_path, get_docs, get_vis_name_attrs},
+};
 
 /// Derive proc-macro for `Documented` trait.
 ///
@@ -75,15 +77,15 @@ pub fn documented(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     #[cfg(not(feature = "customise"))]
-    let config = Config::default();
+    let config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let config = match get_config_customisations(&input.attrs, "documented") {
-        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
-        Ok(None) => Config::default(),
+    let config = match get_customisations_from_attrs(&input.attrs, "documented") {
+        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
+        Ok(None) => DeriveConfig::default(),
         Err(err) => return err.into_compile_error().into(),
     };
 
-    let docs = match get_docs(&input.attrs, &config) {
+    let docs = match get_docs(&input.attrs, config.trim) {
         Ok(Some(doc)) => doc,
         Ok(None) => {
             return Error::new(input.ident.span(), "Missing doc comments")
@@ -183,11 +185,11 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 
     // `#[documented_fields(...)]` on container type
     #[cfg(not(feature = "customise"))]
-    let base_config = Config::default();
+    let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let base_config = match get_config_customisations(&input.attrs, "documented_fields") {
-        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
-        Ok(None) => Config::default(),
+    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_fields") {
+        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
+        Ok(None) => DeriveConfig::default(),
         Err(err) => return err.into_compile_error().into(),
     };
 
@@ -214,12 +216,12 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
                 let config = base_config;
                 #[cfg(feature = "customise")]
                 let config =
-                    if let Some(c) = get_config_customisations(&attrs, "documented_fields")? {
+                    if let Some(c) = get_customisations_from_attrs(&attrs, "documented_fields")? {
                         base_config.with_customisations(c)
                     } else {
                         base_config
                     };
-                get_docs(&attrs, &config).map(|d| (i, d))
+                get_docs(&attrs, config.trim).map(|d| (i, d))
             })
             .collect::<syn::Result<Vec<_>>>()
         {
@@ -332,11 +334,11 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 
     // `#[documented_variants(...)]` on container type
     #[cfg(not(feature = "customise"))]
-    let base_config = Config::default();
+    let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let base_config = match get_config_customisations(&input.attrs, "documented_variants") {
-        Ok(Some(customisations)) => Config::default().with_customisations(customisations),
-        Ok(None) => Config::default(),
+    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_variants") {
+        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
+        Ok(None) => DeriveConfig::default(),
         Err(err) => return err.into_compile_error().into(),
     };
 
@@ -357,13 +359,14 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
                 #[cfg(not(feature = "customise"))]
                 let config = base_config;
                 #[cfg(feature = "customise")]
-                let config =
-                    if let Some(c) = get_config_customisations(&attrs, "documented_variants")? {
-                        base_config.with_customisations(c)
-                    } else {
-                        base_config
-                    };
-                get_docs(&attrs, &config).map(|d| (i, f, d))
+                let config = if let Some(c) =
+                    get_customisations_from_attrs(&attrs, "documented_variants")?
+                {
+                    base_config.with_customisations(c)
+                } else {
+                    base_config
+                };
+                get_docs(&attrs, config.trim).map(|d| (i, f, d))
             })
             .collect::<syn::Result<Vec<_>>>()
         {
@@ -407,38 +410,110 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     .into()
 }
 
-fn get_docs(attrs: &[Attribute], config: &Config) -> syn::Result<Option<String>> {
-    let string_literals = attrs
-        .iter()
-        .filter_map(|attr| match attr.meta {
-            Meta::NameValue(ref name_value) if name_value.path.is_ident("doc") => {
-                Some(&name_value.value)
-            }
-            _ => None,
-        })
-        .map(|expr| match expr {
-            Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) => Ok(s.value()),
-            other => Err(Error::new(
-                other.span(),
-                "Doc comment is not a string literal",
-            )),
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+/// Macro to extract the documentation on any item that accepts doc comments
+/// and store it in a const variable.
+///
+/// # Examples
+///
+/// ```rust
+/// use documented::docs_const;
+///
+/// /// This is a test function
+/// #[docs_const]
+/// fn test_fn() {}
+///
+/// assert_eq!(TEST_FN_DOCS, "This is a test function");
+/// ```
+///
+/// # Configuration
+///
+/// With the `customise` feature enabled, you can customise this macro's
+/// behaviour using attribute arguments.
+///
+/// Currently, you can:
+///
+/// ## 1. set a custom constant visibility like so:
+///
+/// ```rust
+/// mod submodule {
+///     use documented::docs_const;
+///     
+///     /// Boo!
+///     #[docs_const(vis = pub)]
+///     struct Wooooo;
+/// }
+///
+/// // notice how the constant can be seen from outside
+/// assert_eq!(submodule::WOOOOO_DOCS, "Boo!");
+/// ```
+///
+/// ## 2. set a custom constant name like so:
+///
+/// ```rust
+/// use documented::docs_const;
+///
+/// /// If you have a question raise your hand
+/// #[docs_const(name = "DONT_RAISE_YOUR_HAND")]
+/// mod whatever {}
+///
+/// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
+/// ```
+///
+/// ## 3. disable line-trimming like so:
+///
+/// ```rust
+/// use documented::docs_const;
+///
+/// ///     This is a test constant
+/// #[docs_const(trim = false)]
+/// const test_const: u8 = 0;
+///
+/// assert_eq!(TEST_CONST_DOCS, "     This is a test constant");
+/// ```
+///
+/// ---
+///
+/// Multiple option can be specified in a list like so:
+/// `name = "FOO", trim = false`.
+///
+/// If there are other configuration options you wish to have, please
+/// submit an issue or a PR.
+#[proc_macro_attribute]
+pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = syn::parse_macro_input!(item as Item);
 
-    if string_literals.is_empty() {
-        return Ok(None);
-    }
+    #[cfg(not(feature = "customise"))]
+    let config = AttrConfig::default();
+    #[cfg(feature = "customise")]
+    let config = AttrConfig::default()
+        .with_customisations(syn::parse_macro_input!(attr as AttrCustomisations));
 
-    let docs = if config.trim {
-        string_literals
-            .iter()
-            .flat_map(|lit| lit.split('\n').collect::<Vec<_>>())
-            .map(|line| line.trim().to_string())
-            .collect::<Vec<_>>()
-            .join("\n")
-    } else {
-        string_literals.join("\n")
+    let (item_vis, item_name, attrs) = match get_vis_name_attrs(&item) {
+        Ok(pair) => pair,
+        Err(e) => return e.into_compile_error().into(),
     };
 
-    Ok(Some(docs))
+    let docs = match get_docs(attrs, config.trim) {
+        Ok(Some(docs)) => docs,
+        Ok(None) => {
+            // IDEA: customisation: allow_empty
+            return Error::new(item.span(), "Missing doc comments")
+                .into_compile_error()
+                .into();
+        }
+        Err(e) => return e.into_compile_error().into(),
+    };
+
+    let const_vis = config.custom_vis.unwrap_or(item_vis);
+    let const_name = config
+        .custom_name
+        .unwrap_or_else(|| format!("{}_DOCS", item_name.to_case(Case::ScreamingSnake)));
+    let const_ident = Ident::new(&const_name, Span::call_site());
+
+    // insert a const after the docs
+    quote! {
+        #item
+        #const_vis const #const_ident: &'static str = #docs;
+    }
+    .into()
 }

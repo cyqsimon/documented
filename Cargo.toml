@@ -1,5 +1,5 @@
 [workspace]
-members = ["lib", "documented-derive", "documented-test"]
+members = ["lib", "documented-macros", "documented-test"]
 resolver = "2"
 
 [workspace.package]

@@ -6,14 +6,17 @@ use syn::{
     parse2,
     punctuated::Punctuated,
     spanned::Spanned,
-    Attribute, Error, LitBool, Meta, Token,
+    Attribute, Error, Meta, Token,
 };
 
-/// Configurable options via helper attributes.
+#[cfg(feature = "customise")]
+use crate::config::customise_core::ConfigOption;
+
+/// Configurable options for derive macros via helper attributes.
 ///
 /// Initial values are set to default.
 #[cfg_attr(feature = "customise", optfield(
-    pub ConfigCustomisations,
+    pub DeriveCustomisations,
     attrs = add(derive(Default)),
     merge_fn = pub apply_customisations,
     doc = "Parsed user-defined customisations of configurable options.\n\
@@ -21,35 +24,43 @@ use syn::{
     Expected parse stream format: `<KW> = <VAL>, <KW> = <VAL>, ...`"
 ))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Config {
+pub struct DeriveConfig {
     pub trim: bool,
 }
-impl Default for Config {
+impl Default for DeriveConfig {
     fn default() -> Self {
         Self { trim: true }
     }
 }
-impl Config {
+#[cfg(feature = "customise")]
+impl DeriveConfig {
     /// Return a new instance of this config with customisations applied.
-    pub fn with_customisations(mut self, customisations: ConfigCustomisations) -> Self {
+    pub fn with_customisations(mut self, customisations: DeriveCustomisations) -> Self {
         self.apply_customisations(customisations);
         self
     }
 }
 
 #[cfg(feature = "customise")]
-impl Parse for ConfigCustomisations {
+impl Parse for DeriveCustomisations {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        use ConfigOption as O;
+
         let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?;
 
         let mut config = Self::default();
         for arg in args {
             match arg {
-                ConfigOption::Trim(kw, _) if config.trim.is_some() => Err(Error::new(
-                    kw.span(),
+                O::Vis(..) | O::Name(..) => Err(Error::new(
+                    arg.kw_span(),
+                    "This config option is not applicable to derive macros",
+                ))?,
+
+                O::Trim(..) if config.trim.is_some() => Err(Error::new(
+                    arg.kw_span(),
                     "This config option cannot be specified more than once",
                 ))?,
-                ConfigOption::Trim(_, val) => {
+                O::Trim(_, val) => {
                     config.trim.replace(val);
                 }
             }
@@ -59,43 +70,10 @@ impl Parse for ConfigCustomisations {
 }
 
 #[cfg(feature = "customise")]
-mod kw {
-    use syn::custom_keyword;
-
-    custom_keyword!(trim);
-}
-
-/// All known configuration options.
-///
-/// Expected parse stream format: `<KW> = <VAL>`.
-#[cfg(feature = "customise")]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum ConfigOption {
-    /// Trim each line or not.
-    ///
-    /// E.g. `trim = false`.
-    Trim(kw::trim, bool),
-}
-#[cfg(feature = "customise")]
-impl Parse for ConfigOption {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::trim) {
-            let kw = input.parse::<kw::trim>()?;
-            input.parse::<Token![=]>()?;
-            let trim = input.parse::<LitBool>()?;
-            Ok(Self::Trim(kw, trim.value))
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
-#[cfg(feature = "customise")]
-pub fn get_config_customisations(
+pub fn get_customisations_from_attrs(
     attrs: &[Attribute],
     attr_name: &str,
-) -> syn::Result<Option<ConfigCustomisations>> {
+) -> syn::Result<Option<DeriveCustomisations>> {
     let customise_attrs = attrs
         .iter()
         .filter(|attr| attr.path().is_ident(attr_name))
@@ -125,6 +103,6 @@ pub fn get_config_customisations(
         }
     };
 
-    let customisations = parse2::<ConfigCustomisations>(customise_attr.tokens)?;
+    let customisations = parse2(customise_attr.tokens)?;
     Ok(Some(customisations))
 }

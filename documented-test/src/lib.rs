@@ -1,11 +1,5 @@
-#[cfg(test)]
-mod documented;
+#![cfg(test)]
 
-#[cfg(test)]
-mod documented_fields;
-
-#[cfg(test)]
-mod documented_variants;
-
-#[cfg(test)]
+mod attr;
+mod derive;
 mod readme;
