@@ -1,9 +1,9 @@
-use documented::documented_function;
+use documented::docs_const;
 
 #[test]
 fn it_works() {
     /// This is a test function
-    #[documented_function]
+    #[docs_const]
     #[allow(dead_code)]
     fn test_fn() {}
 
@@ -18,7 +18,7 @@ fn different_docs_work() {
     /// This is a test function
     /** This is the second line of the doc*/
     #[doc = "This is the third line of the doc"]
-    #[documented_function]
+    #[docs_const]
     #[allow(dead_code)]
     fn test_fn() {}
 
@@ -28,7 +28,7 @@ fn different_docs_work() {
 #[test]
 fn parameters_work() {
     /// This is a test function
-    #[documented_function]
+    #[docs_const]
     #[allow(dead_code)]
     fn test_fn(_test: String) {}
 
@@ -38,7 +38,7 @@ fn parameters_work() {
 #[test]
 fn return_and_body_works() {
     /// This is a test function
-    #[documented_function]
+    #[docs_const]
     #[allow(dead_code)]
     fn test_fn(input: String) -> String {
         input.to_ascii_lowercase()
@@ -50,7 +50,7 @@ fn return_and_body_works() {
 #[test]
 fn generics_and_lifetime_works() {
     /// This is a test function
-    #[documented_function]
+    #[docs_const]
     #[allow(dead_code)]
     #[allow(clippy::extra_unused_lifetimes)]
     fn test_fn<'a, T: std::fmt::Debug>(input: T) -> T {
@@ -64,7 +64,7 @@ fn generics_and_lifetime_works() {
 fn trim_works() {
     ///           This is a test function        
     ///        Test Trim
-    #[documented_function(trim = true)] // technically redundant, as it's the default
+    #[docs_const(trim = true)] // technically redundant, as it's the default
     #[allow(dead_code)]
     fn test_fn() {}
 
@@ -75,7 +75,7 @@ fn trim_works() {
 fn no_trim_works() {
     ///           This is a test function        
     ///        Test Trim
-    #[documented_function(trim = false)]
+    #[docs_const(trim = false)]
     #[allow(dead_code)]
     fn test_fn() {}
 

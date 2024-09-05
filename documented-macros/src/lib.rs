@@ -2,17 +2,18 @@ mod config;
 pub(crate) mod util;
 
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::quote;
 use syn::{
     parse_macro_input, spanned::Spanned, Attribute, Data, DataEnum, DataStruct, DataUnion,
-    DeriveInput, Error, Fields, Ident,
+    DeriveInput, Error, Fields, Ident, Item,
 };
 
 #[cfg(feature = "customise")]
 use crate::config::{attr::AttrCustomisations, derive::get_customisations_from_attrs};
 use crate::{
     config::{attr::AttrConfig, derive::DeriveConfig},
-    util::{crate_module_path, get_docs},
+    util::{crate_module_path, get_docs, get_vis_name_attrs},
 };
 
 /// Derive proc-macro for `Documented` trait.
@@ -408,14 +409,16 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Macro to extract the documentation of a function and store it in a const variable.
+/// Macro to extract the documentation on any item that accepts doc comments
+/// and store it in a const variable.
+///
 /// # Examples
 ///
 /// ```rust
-/// use documented::documented_function;
+/// use documented::docs_const;
 ///
 /// /// This is a test function
-/// #[documented_function]
+/// #[docs_const]
 /// fn test_fn() {}
 ///
 /// assert_eq!(TEST_FN_DOCS, "This is a test function");
@@ -431,11 +434,11 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// ## 1. set a custom constant name like so:
 ///
 /// ```rust
-/// use documented::documented_function;
+/// use documented::docs_const;
 ///
 /// /// If you have a question raise your hand
-/// #[documented_function(name = "DONT_RAISE_YOUR_HAND")]
-/// fn whatever() {}
+/// #[docs_const(name = "DONT_RAISE_YOUR_HAND")]
+/// mod whatever {}
 ///
 /// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
 /// ```
@@ -443,13 +446,14 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// ## 2. disable line-trimming like so:
 ///
 /// ```rust
-/// use documented::documented_function;
+/// use documented::docs_const;
 ///
-/// ///     This is a test function
-/// #[documented_function(trim = false)]
+/// ///     This is a test constant
+/// #[docs_const(trim = false)]
 /// fn test_fn() {}
+/// const test_const: u8 = 0;
 ///
-/// assert_eq!(TEST_FN_DOCS, "     This is a test function");
+/// assert_eq!(TEST_CONST_DOCS, "     This is a test constant");
 /// ```
 ///
 /// ---
@@ -460,9 +464,8 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// If there are other configuration options you wish to have, please
 /// submit an issue or a PR.
 #[proc_macro_attribute]
-pub fn documented_function(attr: TokenStream, item: TokenStream) -> TokenStream {
-    // The item is a function, so we parse it as such
-    let item = syn::parse_macro_input!(item as syn::ItemFn);
+pub fn docs_const(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let item = syn::parse_macro_input!(item as Item);
 
     #[cfg(not(feature = "customise"))]
     let config = AttrConfig::default();
@@ -470,41 +473,33 @@ pub fn documented_function(attr: TokenStream, item: TokenStream) -> TokenStream 
     let config = AttrConfig::default()
         .with_customisations(syn::parse_macro_input!(attr as AttrCustomisations));
 
-    // The docstring should be part of the function's attributes
-    let attrs = &item.attrs;
+    let (item_vis, item_name, attrs) = match get_vis_name_attrs(&item) {
+        Ok(pair) => pair,
+        Err(e) => return e.into_compile_error().into(),
+    };
 
-    // We get the docs from the attributes
     let docs = match get_docs(attrs, config.trim) {
         Ok(Some(docs)) => docs,
         Ok(None) => {
-            return Error::new(item.sig.span(), "Missing doc comments")
+            // IDEA: customisation: allow_empty
+            return Error::new(item.span(), "Missing doc comments")
                 .into_compile_error()
-                .into()
+                .into();
         }
         Err(e) => return e.into_compile_error().into(),
     };
 
-    // Now we want to keep the function the way it is, but also, after the function,
-    // insert a const variable with the docs
-
-    let doc_var_name = config.custom_name.unwrap_or_else(|| {
+    let const_name = config.custom_name.unwrap_or_else(|| {
         // SCREAMING_SNAKE_CASE by default
-        format!("{}_DOCS", item.sig.ident.to_string().to_uppercase())
+        format!("{}_DOCS", item_name.to_uppercase())
     });
+    let const_ident = Ident::new(&const_name, Span::call_site());
 
-    let doc_var_ident = Ident::new(&doc_var_name, item.sig.ident.span());
-
-    let doc_var_vis = &item.vis;
-
-    let doc_var = quote! {
-        #doc_var_vis const #doc_var_ident: &'static str = #docs;
-    };
-
-    // We return the function as is, but with the docs variable added
-    let function = quote! {
+    // insert a const after the docs
+    // IDEA: customisation: vis
+    quote! {
         #item
-        #doc_var
-    };
-
-    function.into()
+        #item_vis const #const_ident: &'static str = #docs;
+    }
+    .into()
 }

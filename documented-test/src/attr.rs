@@ -1,1 +1,1 @@
-mod documented_function;
+mod docs_const;

@@ -1,6 +1,4 @@
-pub use documented_macros::{
-    documented_function, Documented, DocumentedFields, DocumentedVariants,
-};
+pub use documented_macros::{docs_const, Documented, DocumentedFields, DocumentedVariants};
 
 #[doc(hidden)]
 pub use phf as _private_phf_reexport_for_macro;
