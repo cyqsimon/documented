@@ -479,7 +479,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// If there are other configuration options you wish to have, please
 /// submit an issue or a PR.
 #[proc_macro_attribute]
-pub fn docs_const(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStream) -> TokenStream {
     let item = syn::parse_macro_input!(item as Item);
 
     #[cfg(not(feature = "customise"))]
