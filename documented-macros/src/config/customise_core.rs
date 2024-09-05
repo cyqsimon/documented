@@ -29,16 +29,17 @@ pub enum ConfigOption {
 impl Parse for ConfigOption {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
-        if lookahead.peek(kw::trim) {
-            let kw = input.parse::<kw::trim>()?;
-            input.parse::<Token![=]>()?;
-            let trim = input.parse::<LitBool>()?;
-            Ok(Self::Trim(kw, trim.value))
-        } else if lookahead.peek(kw::name) {
-            let kw = input.parse::<kw::name>()?;
+
+        if lookahead.peek(kw::name) {
+            let kw = input.parse()?;
             input.parse::<Token![=]>()?;
             let name = input.parse::<LitStr>()?;
             Ok(Self::Name(kw, name.value()))
+        } else if lookahead.peek(kw::trim) {
+            let kw = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let trim = input.parse::<LitBool>()?;
+            Ok(Self::Trim(kw, trim.value))
         } else {
             Err(lookahead.error())
         }
