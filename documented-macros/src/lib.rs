@@ -413,6 +413,9 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
 /// Macro to extract the documentation on any item that accepts doc comments
 /// and store it in a const variable.
 ///
+/// By default, this const variable inherits visibility from its parent item.
+/// This can be manually configured; see configuration section below.
+///
 /// # Examples
 ///
 /// ```rust
