@@ -86,16 +86,15 @@ pub fn get_customisations_from_attrs(
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    let customise_attr = match customise_attrs.len() {
-        0 => return Ok(None),
-        1 => customise_attrs[0].clone(),
-        _ => {
-            let mut it = customise_attrs.iter();
+    let customise_attr = match customise_attrs[..] {
+        [] => return Ok(None),
+        [attr] => attr.clone(),
+        [first, ref rest @ ..] => {
             let initial_error = Error::new(
-                it.next().unwrap().span(),
+                first.span(),
                 format!("{attr_name} can only be declared once"),
             );
-            let final_error = it.fold(initial_error, |mut err, declaration| {
+            let final_error = rest.iter().fold(initial_error, |mut err, declaration| {
                 err.combine(Error::new(declaration.span(), "Duplicate declaration here"));
                 err
             });
