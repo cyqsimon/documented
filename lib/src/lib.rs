@@ -40,16 +40,6 @@ pub trait DocumentedFields {
             .ok_or_else(|| Error::NoSuchField(field_name.into()))?;
         Self::FIELD_DOCS[index].ok_or_else(|| Error::NoDocComments(field_name.into()))
     }
-
-    /// Deprecated alias for [`get_field_docs`](Self::get_field_docs).
-    #[deprecated(
-        since = "0.3.0",
-        note = "This function has an inconsistent name. Use `DocumentedFields::get_field_docs` instead."
-    )]
-    #[inline]
-    fn get_field_comment<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
-        Self::get_field_docs(field_name)
-    }
 }
 
 /// Adds an associated function [`get_variant_docs`](Self::get_variant_docs) to
