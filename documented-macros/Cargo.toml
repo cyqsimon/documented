@@ -24,4 +24,3 @@ documented = { path = "../lib" }
 
 [features]
 customise = ["dep:itertools", "dep:optfield", "dep:strum"]
-default = ["customise"]

@@ -39,6 +39,7 @@ impl DeriveConfig {
 
 // This is implemented instead of `syn::parse::Parse` because the options
 // can come from multiple attributes and therefore multiple `MetaList`s.
+#[cfg(feature = "customise")]
 impl TryFrom<Vec<ConfigOption>> for DeriveCustomisations {
     type Error = syn::Error;
 
