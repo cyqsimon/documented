@@ -154,6 +154,22 @@ mod test_customise {
     }
 
     #[test]
+    fn multiple_attrs_works() {
+        #[derive(DocumentedFields)]
+        #[documented_fields()]
+        #[documented_fields()]
+        #[allow(dead_code)]
+        struct Doge {
+            /// Wow, much coin
+            #[documented_fields()]
+            #[documented_fields()]
+            coin: usize,
+        }
+
+        assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
+    }
+
+    #[test]
     fn container_customise_works() {
         #[derive(DocumentedFields)]
         #[documented_fields(trim = false)]

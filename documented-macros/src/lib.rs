@@ -80,8 +80,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
     let config = DeriveConfig::default();
     #[cfg(feature = "customise")]
     let config = match get_customisations_from_attrs(&input.attrs, "documented") {
-        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
-        Ok(None) => DeriveConfig::default(),
+        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
         Err(err) => return err.into_compile_error().into(),
     };
 
@@ -188,8 +187,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
     let base_config = match get_customisations_from_attrs(&input.attrs, "documented_fields") {
-        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
-        Ok(None) => DeriveConfig::default(),
+        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
         Err(err) => return err.into_compile_error().into(),
     };
 
@@ -215,12 +213,10 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
                 #[cfg(not(feature = "customise"))]
                 let config = base_config;
                 #[cfg(feature = "customise")]
-                let config =
-                    if let Some(c) = get_customisations_from_attrs(&attrs, "documented_fields")? {
-                        base_config.with_customisations(c)
-                    } else {
-                        base_config
-                    };
+                let config = base_config.with_customisations(get_customisations_from_attrs(
+                    &attrs,
+                    "documented_fields",
+                )?);
                 get_docs(&attrs, config.trim).map(|d| (i, d))
             })
             .collect::<syn::Result<Vec<_>>>()
@@ -337,8 +333,7 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
     let base_config = match get_customisations_from_attrs(&input.attrs, "documented_variants") {
-        Ok(Some(customisations)) => DeriveConfig::default().with_customisations(customisations),
-        Ok(None) => DeriveConfig::default(),
+        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
         Err(err) => return err.into_compile_error().into(),
     };
 
@@ -359,13 +354,10 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
                 #[cfg(not(feature = "customise"))]
                 let config = base_config;
                 #[cfg(feature = "customise")]
-                let config = if let Some(c) =
-                    get_customisations_from_attrs(&attrs, "documented_variants")?
-                {
-                    base_config.with_customisations(c)
-                } else {
-                    base_config
-                };
+                let config = base_config.with_customisations(get_customisations_from_attrs(
+                    &attrs,
+                    "documented_variants",
+                )?);
                 get_docs(&attrs, config.trim).map(|d| (i, f, d))
             })
             .collect::<syn::Result<Vec<_>>>()

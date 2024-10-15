@@ -17,7 +17,12 @@ mod kw {
 /// accept or reject any of them in their `Parse` implementation.
 ///
 /// Expected parse stream format: `<KW> = <VAL>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, strum::EnumDiscriminants)]
+#[strum_discriminants(
+    name(ConfigOptionType),
+    derive(strum::Display, Hash),
+    strum(serialize_all = "snake_case")
+)]
 pub enum ConfigOption {
     /// Custom visibility for the generated constant.
     ///

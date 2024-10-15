@@ -133,6 +133,25 @@ mod test_customise {
     }
 
     #[test]
+    fn multiple_attrs_works() {
+        #[derive(DocumentedVariants)]
+        #[documented_variants()]
+        #[documented_variants()]
+        #[allow(dead_code)]
+        enum Name {
+            /// Wow
+            #[documented_variants()]
+            #[documented_variants()]
+            Doge,
+            /// RIP
+            Kabuso,
+        }
+
+        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
+        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+    }
+
+    #[test]
     fn container_customise_works() {
         #[derive(DocumentedVariants)]
         #[documented_variants(trim = false)]

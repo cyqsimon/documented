@@ -118,6 +118,24 @@ doge
     }
 
     #[test]
+    fn multiple_attrs_works() {
+        /** Wow
+            much
+            doge
+        */
+        #[derive(Documented)]
+        #[documented()]
+        #[documented()]
+        struct Doge;
+
+        let doc_str = "Wow
+much
+doge
+";
+        assert_eq!(Doge::DOCS, doc_str);
+    }
+
+    #[test]
     fn trim_false_works() {
         /** Wow
             much
