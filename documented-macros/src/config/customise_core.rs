@@ -1,8 +1,9 @@
+use itertools::Itertools;
 use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
     spanned::Spanned,
-    LitBool, LitStr, Token, Visibility,
+    Error, LitBool, LitStr, Token, Visibility,
 };
 
 mod kw {
@@ -19,6 +20,7 @@ mod kw {
 /// Expected parse stream format: `<KW> = <VAL>`.
 #[derive(Clone, Debug, PartialEq, Eq, strum::EnumDiscriminants)]
 #[strum_discriminants(
+    vis(pub(self)),
     name(ConfigOptionType),
     derive(strum::Display, Hash),
     strum(serialize_all = "snake_case")
@@ -71,4 +73,31 @@ impl ConfigOption {
             Self::Trim(kw, _) => kw.span(),
         }
     }
+}
+
+/// Make sure there are no duplicate options.
+/// Otherwise produces an error with detailed span info.
+pub fn ensure_unique_options(opts: &[ConfigOption]) -> syn::Result<()> {
+    for (ty, opts) in opts
+        .iter()
+        .into_group_map_by(|opt| ConfigOptionType::from(*opt))
+        .into_iter()
+    {
+        match &opts[..] {
+            [] => unreachable!(), // guaranteed by `into_group_map_by`
+            [_unique] => continue,
+            [first, rest @ ..] => {
+                let initial_error = Error::new(
+                    first.kw_span(),
+                    format!("Option {ty} can only be declaration once"),
+                );
+                let final_error = rest.iter().fold(initial_error, |mut err, opt| {
+                    err.combine(Error::new(opt.kw_span(), "Duplicate declaration here"));
+                    err
+                });
+                Err(final_error)?
+            }
+        }
+    }
+    Ok(())
 }

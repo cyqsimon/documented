@@ -1,12 +1,10 @@
 #[cfg(feature = "customise")]
-use itertools::Itertools;
-#[cfg(feature = "customise")]
 use optfield::optfield;
 #[cfg(feature = "customise")]
 use syn::{punctuated::Punctuated, spanned::Spanned, Attribute, Error, Meta, Token};
 
 #[cfg(feature = "customise")]
-use crate::config::customise_core::{ConfigOption, ConfigOptionType};
+use crate::config::customise_core::{ensure_unique_options, ConfigOption};
 
 /// Configurable options for derive macros via helper attributes.
 ///
@@ -68,7 +66,7 @@ pub fn get_customisations_from_attrs(
     attrs: &[Attribute],
     attr_name: &str,
 ) -> syn::Result<DeriveCustomisations> {
-    let customisations = attrs
+    let options = attrs
         .iter()
         // remove irrelevant attributes
         .filter(|attr| attr.path().is_ident(attr_name))
@@ -85,25 +83,9 @@ pub fn get_customisations_from_attrs(
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()
         .flatten()
-        // error on duplicates
-        .into_group_map_by(|opt| ConfigOptionType::from(opt)) // lifetime variance issues
-        .into_iter()
-        .map(|(ty, opts)| match &opts[..] {
-            [] => unreachable!(), // guaranteed by `into_group_map_by`
-            [opt] => Ok(opt.clone()),
-            [first, rest @ ..] => {
-                let initial_error = Error::new(
-                    first.kw_span(),
-                    format!("Option {ty} can only be declaration once"),
-                );
-                let final_error = rest.iter().fold(initial_error, |mut err, opt| {
-                    err.combine(Error::new(opt.kw_span(), "Duplicate declaration here"));
-                    err
-                });
-                Err(final_error)
-            }
-        })
-        .collect::<Result<Vec<_>, _>>()?
-        .try_into()?;
-    Ok(customisations)
+        .collect::<Vec<_>>();
+
+    ensure_unique_options(&options)?;
+
+    options.try_into()
 }

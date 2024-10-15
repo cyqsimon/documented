@@ -5,11 +5,11 @@ use syn::Visibility;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Token,
+    Token,
 };
 
 #[cfg(feature = "customise")]
-use crate::config::customise_core::ConfigOption;
+use crate::config::customise_core::{ensure_unique_options, ConfigOption};
 
 /// Configurable arguments for attribute macros.
 ///
@@ -53,33 +53,23 @@ impl Parse for AttrCustomisations {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         use ConfigOption as O;
 
-        let mut config = Self::default();
+        let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?
+            .into_iter()
+            .collect::<Vec<_>>();
 
-        let args = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?;
+        ensure_unique_options(&args)?;
+
+        let mut config = Self::default();
         for arg in args {
             // I'd love to macro this if declarative macros can expand to a full match arm,
             // but no: https://github.com/rust-lang/rfcs/issues/2654
             match arg {
-                O::Vis(..) if config.custom_vis.is_some() => Err(Error::new(
-                    arg.kw_span(),
-                    "This config option cannot be specified more than once",
-                ))?,
                 O::Vis(_, val) => {
                     config.custom_vis.replace(val);
                 }
-
-                O::Name(..) if config.custom_name.is_some() => Err(Error::new(
-                    arg.kw_span(),
-                    "This config option cannot be specified more than once",
-                ))?,
                 O::Name(_, val) => {
                     config.custom_name.replace(val);
                 }
-
-                O::Trim(..) if config.trim.is_some() => Err(Error::new(
-                    arg.kw_span(),
-                    "This config option cannot be specified more than once",
-                ))?,
                 O::Trim(_, val) => {
                     config.trim.replace(val);
                 }
