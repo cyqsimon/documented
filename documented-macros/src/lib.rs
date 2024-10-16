@@ -1,20 +1,19 @@
 mod config;
+mod derive_impl;
 pub(crate) mod util;
 
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{
-    parse_macro_input, spanned::Spanned, Attribute, Data, DataEnum, DataStruct, DataUnion,
-    DeriveInput, Error, Fields, Ident, Item,
-};
+use syn::{spanned::Spanned, Error, Ident, Item};
 
 #[cfg(feature = "customise")]
-use crate::config::{attr::AttrCustomisations, derive::get_customisations_from_attrs};
+use crate::config::attr::AttrCustomisations;
 use crate::{
-    config::{attr::AttrConfig, derive::DeriveConfig},
-    util::{crate_module_path, get_docs, get_vis_name_attrs},
+    config::attr::AttrConfig,
+    derive_impl::{documented_fields_impl, documented_impl, documented_variants_impl, DocType},
+    util::{get_docs, get_vis_name_attrs},
 };
 
 /// Derive proc-macro for `Documented` trait.
@@ -71,36 +70,19 @@ use crate::{
     proc_macro_derive(Documented, attributes(documented))
 )]
 pub fn documented(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    documented_impl(input, DocType::Str)
+}
 
-    let ident = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    #[cfg(not(feature = "customise"))]
-    let config = DeriveConfig::default();
-    #[cfg(feature = "customise")]
-    let config = match get_customisations_from_attrs(&input.attrs, "documented") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
-    };
-
-    let docs = match get_docs(&input.attrs, config.trim) {
-        Ok(Some(doc)) => doc,
-        Ok(None) => {
-            return Error::new(input.ident.span(), "Missing doc comments")
-                .into_compile_error()
-                .into()
-        }
-        Err(e) => return e.into_compile_error().into(),
-    };
-
-    quote! {
-        #[automatically_derived]
-        impl #impl_generics documented::Documented for #ident #ty_generics #where_clause {
-            const DOCS: &'static str = #docs;
-        }
-    }
-    .into()
+/// Derive proc-macro for `DocumentedOpt` trait.
+///
+/// See [`Documented`] for usage.
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedOpt))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(DocumentedOpt, attributes(documented))
+)]
+pub fn documented_opt(input: TokenStream) -> TokenStream {
+    documented_impl(input, DocType::OptStr)
 }
 
 /// Derive proc-macro for `DocumentedFields` trait.
@@ -114,10 +96,14 @@ pub fn documented(input: TokenStream) -> TokenStream {
 /// struct BornIn69 {
 ///     /// Cry like a grandmaster.
 ///     rawr: String,
+///     /// Before what?
 ///     explosive: usize,
 /// };
 ///
-/// assert_eq!(BornIn69::FIELD_DOCS, [Some("Cry like a grandmaster."), None]);
+/// assert_eq!(
+///     BornIn69::FIELD_DOCS,
+///     ["Cry like a grandmaster.", "Before what?"]
+/// );
 /// ```
 ///
 /// You can also use [`get_field_docs`](Self::get_field_docs) to access the
@@ -130,14 +116,15 @@ pub fn documented(input: TokenStream) -> TokenStream {
 /// # struct BornIn69 {
 /// #     /// Cry like a grandmaster.
 /// #     rawr: String,
+/// #     /// Before what?
 /// #     explosive: usize,
 /// # };
 /// #
-/// assert_eq!(BornIn69::get_field_docs("rawr"), Ok("Cry like a grandmaster."));
 /// assert_eq!(
-///     BornIn69::get_field_docs("explosive"),
-///     Err(Error::NoDocComments("explosive".to_string()))
+///     BornIn69::get_field_docs("rawr"),
+///     Ok("Cry like a grandmaster.")
 /// );
+/// assert_eq!(BornIn69::get_field_docs("explosive"), Ok("Before what?"));
 /// assert_eq!(
 ///     BornIn69::get_field_docs("gotcha"),
 ///     Err(Error::NoSuchField("gotcha".to_string()))
@@ -166,7 +153,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
 ///     fried_liver: bool,
 /// }
 ///
-/// assert_eq!(Frankly::FIELD_DOCS, [Some("     Delicious."), Some("I'm vegan.")]);
+/// assert_eq!(Frankly::FIELD_DOCS, ["     Delicious.", "I'm vegan."]);
 /// ```
 ///
 /// If there are other configuration options you wish to have, please
@@ -177,90 +164,19 @@ pub fn documented(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedFields, attributes(documented_fields))
 )]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    documented_fields_impl(input, DocType::Str)
+}
 
-    let ident = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    // `#[documented_fields(...)]` on container type
-    #[cfg(not(feature = "customise"))]
-    let base_config = DeriveConfig::default();
-    #[cfg(feature = "customise")]
-    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_fields") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
-    };
-
-    let (field_idents, field_docs): (Vec<_>, Vec<_>) = {
-        let fields_attrs: Vec<(Option<Ident>, Vec<Attribute>)> = match input.data.clone() {
-            Data::Enum(DataEnum { variants, .. }) => variants
-                .into_iter()
-                .map(|v| (Some(v.ident), v.attrs))
-                .collect(),
-            Data::Struct(DataStruct { fields, .. }) => {
-                fields.into_iter().map(|f| (f.ident, f.attrs)).collect()
-            }
-            Data::Union(DataUnion { fields, .. }) => fields
-                .named
-                .into_iter()
-                .map(|f| (f.ident, f.attrs))
-                .collect(),
-        };
-
-        match fields_attrs
-            .into_iter()
-            .map(|(i, attrs)| {
-                #[cfg(not(feature = "customise"))]
-                let config = base_config;
-                #[cfg(feature = "customise")]
-                let config = base_config.with_customisations(get_customisations_from_attrs(
-                    &attrs,
-                    "documented_fields",
-                )?);
-                get_docs(&attrs, config.trim).map(|d| (i, d))
-            })
-            .collect::<syn::Result<Vec<_>>>()
-        {
-            Ok(t) => t.into_iter().unzip(),
-            Err(e) => return e.into_compile_error().into(),
-        }
-    };
-
-    // quote macro needs some help with `Option`s
-    // see: https://github.com/dtolnay/quote/issues/213
-    let field_docs_tokenised: Vec<_> = field_docs
-        .into_iter()
-        .map(|opt| match opt {
-            Some(c) => quote! { Some(#c) },
-            None => quote! { None },
-        })
-        .collect();
-
-    let phf_match_arms: Vec<_> = field_idents
-        .into_iter()
-        .enumerate()
-        .filter_map(|(i, o)| o.map(|ident| (i, ident.to_string())))
-        .map(|(i, ident)| quote! { #ident => #i, })
-        .collect();
-
-    let documented_module_path = crate_module_path();
-
-    quote! {
-        #[automatically_derived]
-        impl #impl_generics documented::DocumentedFields for #ident #ty_generics #where_clause {
-            const FIELD_DOCS: &'static [Option<&'static str>] = &[#(#field_docs_tokenised),*];
-
-            fn __documented_get_index<__Documented_T: AsRef<str>>(field_name: __Documented_T) -> Option<usize> {
-                use #documented_module_path::_private_phf_reexport_for_macro as phf;
-
-                static PHF: phf::Map<&'static str, usize> = phf::phf_map! {
-                    #(#phf_match_arms)*
-                };
-                PHF.get(field_name.as_ref()).copied()
-            }
-        }
-    }
-    .into()
+/// Derive proc-macro for `DocumentedFieldsOpt` trait.
+///
+/// See [`DocumentedFields`] for usage.
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedFieldsOpt))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(DocumentedFieldsOpt, attributes(documented_fields))
+)]
+pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
+    documented_fields_impl(input, DocType::OptStr)
 }
 
 /// Derive proc-macro for `DocumentedVariants` trait.
@@ -272,19 +188,14 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 ///
 /// #[derive(DocumentedVariants)]
 /// enum NeverPlay {
+///     /// Terrible.
 ///     F3,
 ///     /// I fell out of my chair.
 ///     F6,
 /// }
 ///
-/// assert_eq!(
-///     NeverPlay::F3.get_variant_docs(),
-///     Err(Error::NoDocComments("F3".into()))
-/// );
-/// assert_eq!(
-///     NeverPlay::F6.get_variant_docs(),
-///     Ok("I fell out of my chair.")
-/// );
+/// assert_eq!(NeverPlay::F3.get_variant_docs(), "Terrible.");
+/// assert_eq!(NeverPlay::F6.get_variant_docs(), "I fell out of my chair.");
 /// ```
 ///
 /// # Configuration
@@ -310,9 +221,9 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
 /// }
 /// assert_eq!(
 ///     Always::SacTheExchange.get_variant_docs(),
-///     Ok("     Or the quality.")
+///     "     Or the quality."
 /// );
-/// assert_eq!(Always::Retreat.get_variant_docs(), Ok("Like a Frenchman."));
+/// assert_eq!(Always::Retreat.get_variant_docs(), "Like a Frenchman.");
 /// ```
 ///
 /// If there are other configuration options you wish to have, please
@@ -323,83 +234,19 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedVariants, attributes(documented_variants))
 )]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    documented_variants_impl(input, DocType::Str)
+}
 
-    let ident = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    // `#[documented_variants(...)]` on container type
-    #[cfg(not(feature = "customise"))]
-    let base_config = DeriveConfig::default();
-    #[cfg(feature = "customise")]
-    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_variants") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
-    };
-
-    let variants_docs = {
-        let Data::Enum(DataEnum { variants, .. }) = input.data else {
-            return Error::new(
-                input.span(), // this targets the `struct`/`union` keyword
-                "DocumentedVariants can only be used on enums.\n\
-                For structs and unions, use DocumentedFields instead.",
-            )
-            .into_compile_error()
-            .into();
-        };
-        match variants
-            .into_iter()
-            .map(|v| (v.ident, v.fields, v.attrs))
-            .map(|(i, f, attrs)| {
-                #[cfg(not(feature = "customise"))]
-                let config = base_config;
-                #[cfg(feature = "customise")]
-                let config = base_config.with_customisations(get_customisations_from_attrs(
-                    &attrs,
-                    "documented_variants",
-                )?);
-                get_docs(&attrs, config.trim).map(|d| (i, f, d))
-            })
-            .collect::<syn::Result<Vec<_>>>()
-        {
-            Ok(t) => t,
-            Err(e) => return e.into_compile_error().into(),
-        }
-    };
-
-    let match_arms: Vec<_> = variants_docs
-        .into_iter()
-        .map(|(ident, fields, docs)| {
-            let pat = match fields {
-                Fields::Unit => quote! { Self::#ident },
-                Fields::Unnamed(_) => quote! { Self::#ident(..) },
-                Fields::Named(_) => quote! { Self::#ident{..} },
-            };
-            match docs {
-                Some(docs_str) => quote! { #pat => Ok(#docs_str), },
-                None => {
-                    let ident_str = ident.to_string();
-                    quote! { #pat => Err(documented::Error::NoDocComments(#ident_str.into())), }
-                }
-            }
-        })
-        .collect();
-
-    // IDEA: I'd like to use phf here, but it doesn't seem to be possible at the moment,
-    // because there isn't a way to get an enum's discriminant at compile time
-    // if this becomes possible in the future, or alternatively you have a good workaround,
-    // improvement suggestions are more than welcomed
-    quote! {
-        #[automatically_derived]
-        impl #impl_generics documented::DocumentedVariants for #ident #ty_generics #where_clause {
-            fn get_variant_docs(&self) -> Result<&'static str, documented::Error> {
-                match self {
-                    #(#match_arms)*
-                }
-            }
-        }
-    }
-    .into()
+/// Derive proc-macro for `DocumentedVariantsOpt` trait.
+///
+/// See [`DocumentedVariants`] for usage.
+#[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedVariantsOpt))]
+#[cfg_attr(
+    feature = "customise",
+    proc_macro_derive(DocumentedVariantsOpt, attributes(documented_variants))
+)]
+pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
+    documented_variants_impl(input, DocType::OptStr)
 }
 
 /// Macro to extract the documentation on any item that accepts doc comments

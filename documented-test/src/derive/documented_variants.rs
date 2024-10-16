@@ -1,19 +1,17 @@
-use documented::{DocumentedVariants, Error};
+use documented::DocumentedVariants;
 
 #[test]
 fn it_works() {
     #[derive(DocumentedVariants)]
     enum Foo {
+        /// 1
         First,
         /// 2
         Second,
     }
 
-    assert_eq!(
-        Foo::First.get_variant_docs(),
-        Err(Error::NoDocComments("First".into()))
-    );
-    assert_eq!(Foo::Second.get_variant_docs(), Ok("2"));
+    assert_eq!(Foo::First.get_variant_docs(), "1");
+    assert_eq!(Foo::Second.get_variant_docs(), "2");
 }
 
 #[test]
@@ -35,20 +33,17 @@ fn works_on_adt_enums() {
         StructEmpty {},
     }
 
-    assert_eq!(Bar::Unit.get_variant_docs(), Ok("A unit variant."));
-    assert_eq!(Bar::Tuple0().get_variant_docs(), Ok("A 0-tuple variant."));
-    assert_eq!(Bar::Tuple1(1).get_variant_docs(), Ok("A 1-tuple variant."));
-    assert_eq!(
-        Bar::Tuple2(2, 2).get_variant_docs(),
-        Ok("A 2-tuple variant.")
-    );
+    assert_eq!(Bar::Unit.get_variant_docs(), "A unit variant.");
+    assert_eq!(Bar::Tuple0().get_variant_docs(), "A 0-tuple variant.");
+    assert_eq!(Bar::Tuple1(1).get_variant_docs(), "A 1-tuple variant.");
+    assert_eq!(Bar::Tuple2(2, 2).get_variant_docs(), "A 2-tuple variant.");
     assert_eq!(
         Bar::Struct { alpha: 0, bravo: 0 }.get_variant_docs(),
-        Ok("A struct variant.")
+        "A struct variant."
     );
     assert_eq!(
         Bar::StructEmpty {}.get_variant_docs(),
-        Ok("An empty struct variant.")
+        "An empty struct variant."
     );
 }
 
@@ -63,8 +58,8 @@ fn works_on_generic_enums() {
         Dufus(T, U),
     }
 
-    assert_eq!(Foo::<u8, u8>::Rufus(69).get_variant_docs(), Ok("600"));
-    assert_eq!(Foo::Dufus(69, 420).get_variant_docs(), Ok("599"));
+    assert_eq!(Foo::<u8, u8>::Rufus(69).get_variant_docs(), "600");
+    assert_eq!(Foo::Dufus(69, 420).get_variant_docs(), "599");
 }
 
 #[test]
@@ -78,8 +73,8 @@ fn works_on_generic_enums_with_bounds() {
         Dufus(T, U),
     }
 
-    assert_eq!(Foo::<u8, u8>::Rufus(69).get_variant_docs(), Ok("600"));
-    assert_eq!(Foo::Dufus(69, 420).get_variant_docs(), Ok("599"));
+    assert_eq!(Foo::<u8, u8>::Rufus(69).get_variant_docs(), "600");
+    assert_eq!(Foo::Dufus(69, 420).get_variant_docs(), "599");
 }
 
 #[test]
@@ -93,8 +88,8 @@ fn works_on_const_generic_enums() {
         Dufus([i8; LEN]),
     }
 
-    assert_eq!(Foo::Rufus([42; 69]).get_variant_docs(), Ok("600"));
-    assert_eq!(Foo::Dufus([42; 69]).get_variant_docs(), Ok("599"));
+    assert_eq!(Foo::Rufus([42; 69]).get_variant_docs(), "600");
+    assert_eq!(Foo::Dufus([42; 69]).get_variant_docs(), "599");
 }
 
 #[test]
@@ -108,8 +103,8 @@ fn works_on_lifetimed_enums() {
         Dufus(T, &'a T),
     }
 
-    assert_eq!(Foo::Rufus(&69).get_variant_docs(), Ok("600"));
-    assert_eq!(Foo::Dufus(69, &420).get_variant_docs(), Ok("599"));
+    assert_eq!(Foo::Rufus(&69).get_variant_docs(), "600");
+    assert_eq!(Foo::Dufus(69, &420).get_variant_docs(), "599");
 }
 
 #[cfg(feature = "customise")]
@@ -128,8 +123,8 @@ mod test_customise {
             Kabuso,
         }
 
-        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
-        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+        assert_eq!(Name::Doge.get_variant_docs(), "Wow");
+        assert_eq!(Name::Kabuso.get_variant_docs(), "RIP");
     }
 
     #[test]
@@ -147,8 +142,8 @@ mod test_customise {
             Kabuso,
         }
 
-        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
-        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+        assert_eq!(Name::Doge.get_variant_docs(), "Wow");
+        assert_eq!(Name::Kabuso.get_variant_docs(), "RIP");
     }
 
     #[test]
@@ -163,8 +158,8 @@ mod test_customise {
             Kabuso,
         }
 
-        assert_eq!(Name::Doge.get_variant_docs(), Ok("     Wow"));
-        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("     RIP"));
+        assert_eq!(Name::Doge.get_variant_docs(), "     Wow");
+        assert_eq!(Name::Kabuso.get_variant_docs(), "     RIP");
     }
 
     #[test]
@@ -179,8 +174,8 @@ mod test_customise {
             Kabuso,
         }
 
-        assert_eq!(Name::Doge.get_variant_docs(), Ok("     Wow"));
-        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("RIP"));
+        assert_eq!(Name::Doge.get_variant_docs(), "     Wow");
+        assert_eq!(Name::Kabuso.get_variant_docs(), "RIP");
     }
 
     #[test]
@@ -196,7 +191,7 @@ mod test_customise {
             Kabuso,
         }
 
-        assert_eq!(Name::Doge.get_variant_docs(), Ok("Wow"));
-        assert_eq!(Name::Kabuso.get_variant_docs(), Ok("     RIP"));
+        assert_eq!(Name::Doge.get_variant_docs(), "Wow");
+        assert_eq!(Name::Kabuso.get_variant_docs(), "     RIP");
     }
 }
