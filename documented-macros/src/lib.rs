@@ -1,19 +1,14 @@
+mod attr_impl;
 mod config;
 mod derive_impl;
 pub(crate) mod util;
 
-use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
-use proc_macro2::Span;
-use quote::quote;
-use syn::{parse_macro_input, Error, Ident, Item};
+use syn::{parse_macro_input, Error};
 
-#[cfg(feature = "customise")]
-use crate::config::attr::AttrCustomisations;
 use crate::{
-    config::attr::AttrConfig,
+    attr_impl::docs_const_impl,
     derive_impl::{documented_fields_impl, documented_impl, documented_variants_impl, DocType},
-    util::{get_docs, get_vis_name_attrs},
 };
 
 /// Derive proc-macro for `Documented` trait.
@@ -334,40 +329,10 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// submit an issue or a PR.
 #[proc_macro_attribute]
 pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item = syn::parse_macro_input!(item as Item);
-
     #[cfg(not(feature = "customise"))]
-    let config = AttrConfig::default();
+    let ts = docs_const_impl(parse_macro_input!(item));
     #[cfg(feature = "customise")]
-    let config = AttrConfig::default()
-        .with_customisations(syn::parse_macro_input!(attr as AttrCustomisations));
+    let ts = docs_const_impl(parse_macro_input!(item), parse_macro_input!(attr));
 
-    let (item_vis, item_name, attrs) = match get_vis_name_attrs(&item) {
-        Ok(pair) => pair,
-        Err(e) => return e.into_compile_error().into(),
-    };
-
-    let docs = match get_docs(attrs, config.trim) {
-        Ok(Some(docs)) => docs,
-        Ok(None) => {
-            // IDEA: customisation: allow_empty
-            return Error::new_spanned(&item, "Missing doc comments")
-                .into_compile_error()
-                .into();
-        }
-        Err(e) => return e.into_compile_error().into(),
-    };
-
-    let const_vis = config.custom_vis.unwrap_or(item_vis);
-    let const_name = config
-        .custom_name
-        .unwrap_or_else(|| format!("{}_DOCS", item_name.to_case(Case::ScreamingSnake)));
-    let const_ident = Ident::new(&const_name, Span::call_site());
-
-    // insert a const after the docs
-    quote! {
-        #item
-        #const_vis const #const_ident: &'static str = #docs;
-    }
-    .into()
+    ts.unwrap_or_else(Error::into_compile_error).into()
 }
