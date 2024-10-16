@@ -38,14 +38,17 @@ impl DocType {
     /// The closure takes two arguments:
     ///
     /// 1. The optional doc comments on an item
-    /// 2. The span on which to report any errors
+    /// 2. The token span on which to report any errors
     ///
     /// And fallibly returns the tokenised doc comments.
-    fn docs_handler_opt(&self) -> Box<dyn Fn(Option<String>, Span) -> syn::Result<TokenStream>> {
+    fn docs_handler_opt<S>(&self) -> Box<dyn Fn(Option<String>, S) -> syn::Result<TokenStream>>
+    where
+        S: ToTokens,
+    {
         match self {
             Self::Str => Box::new(|docs_opt, span| match docs_opt {
                 Some(docs) => Ok(quote! { #docs }),
-                None => Err(Error::new(span, "Missing doc comments")),
+                None => Err(Error::new_spanned(span, "Missing doc comments")),
             }),
             Self::OptStr => Box::new(|docs_opt, _span| {
                 // quote macro needs some help with `Option`s
@@ -82,7 +85,7 @@ pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<Toke
         .map(|c| DeriveConfig::default().with_customisations(c))?;
 
     let docs = get_docs(&input.attrs, config.trim)
-        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, ident.span()))?;
+        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, &input))?;
 
     Ok(quote! {
         #[automatically_derived]
@@ -108,16 +111,16 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
     let fields_attrs: Vec<_> = match input.data.clone() {
         Data::Enum(DataEnum { variants, .. }) => variants
             .into_iter()
-            .map(|v| (v.span(), Some(v.ident), v.attrs))
+            .map(|v| (v.to_token_stream(), Some(v.ident), v.attrs))
             .collect(),
         Data::Struct(DataStruct { fields, .. }) => fields
             .into_iter()
-            .map(|f| (f.span(), f.ident, f.attrs))
+            .map(|f| (f.to_token_stream(), f.ident, f.attrs))
             .collect(),
         Data::Union(DataUnion { fields, .. }) => fields
             .named
             .into_iter()
-            .map(|f| (f.span(), f.ident, f.attrs))
+            .map(|f| (f.to_token_stream(), f.ident, f.attrs))
             .collect(),
     };
 
@@ -176,28 +179,32 @@ pub fn documented_variants_impl(input: DeriveInput, docs_ty: DocType) -> syn::Re
     let base_config = get_customisations_from_attrs(&input.attrs, "documented_variants")
         .map(|c| DeriveConfig::default().with_customisations(c))?;
 
-    let Data::Enum(DataEnum { variants, .. }) = input.data else {
-        Err(Error::new(
-            input.span(), // this targets the `struct`/`union` keyword
+    let variants = match input.data {
+        Data::Enum(DataEnum { variants, .. }) => Ok(variants),
+        Data::Struct(DataStruct { struct_token, .. }) => Err(struct_token.span()),
+        Data::Union(DataUnion { union_token, .. }) => Err(union_token.span()),
+    }
+    .map_err(|span| {
+        Error::new(
+            span,
             "DocumentedVariants can only be used on enums.\n\
             For structs and unions, use DocumentedFields instead.",
-        ))?
-    };
+        )
+    })?;
 
     let variants_docs = variants
         .into_iter()
-        .map(|v| (v.span(), v.ident, v.fields, v.attrs))
-        .map(|(span, ident, field, attrs)| {
+        .map(|v| {
             #[cfg(not(feature = "customise"))]
             let config = base_config;
             #[cfg(feature = "customise")]
             let config = base_config.with_customisations(get_customisations_from_attrs(
-                &attrs,
+                &v.attrs,
                 "documented_variants",
             )?);
-            get_docs(&attrs, config.trim)
-                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
-                .map(|docs| (ident, field, docs))
+            get_docs(&v.attrs, config.trim)
+                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, &v))
+                .map(|docs| (v.ident, v.fields, docs))
         })
         .collect::<syn::Result<Vec<_>>>()?;
 

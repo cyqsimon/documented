@@ -6,7 +6,7 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{parse_macro_input, spanned::Spanned, Error, Ident, Item};
+use syn::{parse_macro_input, Error, Ident, Item};
 
 #[cfg(feature = "customise")]
 use crate::config::attr::AttrCustomisations;
@@ -351,7 +351,7 @@ pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStrea
         Ok(Some(docs)) => docs,
         Ok(None) => {
             // IDEA: customisation: allow_empty
-            return Error::new(item.span(), "Missing doc comments")
+            return Error::new_spanned(&item, "Missing doc comments")
                 .into_compile_error()
                 .into();
         }
