@@ -1,7 +1,7 @@
 [package]
 authors.workspace = true
 categories.workspace = true
-description = "Traits and derive macros for accessing your type's documentation at runtime"
+description = "Derive and attribute macros for accessing your type's documentation at runtime"
 edition.workspace = true
 keywords.workspace = true
 license.workspace = true
