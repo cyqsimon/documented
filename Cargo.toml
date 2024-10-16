@@ -6,6 +6,7 @@ resolver = "2"
 authors = [
     "cyqsimon <28627918+cyqsimon@users.noreply.github.com>",
     "Uriel <urielfontan2002@gmail.com>",
+    "Sese Mueller <sese4dasbinichagmail.com>",
 ]
 categories = ["rust-patterns"]
 edition = "2021"
