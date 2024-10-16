@@ -12,7 +12,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-documented-macros = { path = "../documented-macros", version = "0.7.0" }
+documented-macros = { path = "../documented-macros", version = "0.7.1" }
 phf = { version = "0.11", default-features = false, features = ["macros"] }
 thiserror = "1.0.64"
 
