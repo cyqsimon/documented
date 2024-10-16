@@ -1,12 +1,12 @@
 #[cfg(feature = "customise")]
 use optfield::optfield;
-use syn::Visibility;
 #[cfg(feature = "customise")]
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     Token,
 };
+use syn::{Expr, Visibility};
 
 #[cfg(feature = "customise")]
 use crate::config::customise_core::{ensure_unique_options, ConfigOption};
@@ -28,6 +28,7 @@ pub struct AttrConfig {
     // see https://docs.rs/optfield/latest/optfield/#rewrapping-option-fields
     pub custom_vis: Option<Visibility>,
     pub custom_name: Option<String>,
+    pub default_value: Option<Expr>,
     pub trim: bool,
 }
 impl Default for AttrConfig {
@@ -35,6 +36,7 @@ impl Default for AttrConfig {
         Self {
             custom_vis: None,
             custom_name: None,
+            default_value: None,
             trim: true,
         }
     }
@@ -69,6 +71,9 @@ impl Parse for AttrCustomisations {
                 }
                 O::Name(_, val) => {
                     config.custom_name.replace(val);
+                }
+                O::Default(_, mode) => {
+                    config.default_value.replace(mode);
                 }
                 O::Trim(_, val) => {
                     config.trim.replace(val);

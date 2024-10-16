@@ -1,5 +1,6 @@
 #[cfg(feature = "customise")]
 use optfield::optfield;
+use syn::Expr;
 #[cfg(feature = "customise")]
 use syn::{punctuated::Punctuated, spanned::Spanned, Attribute, Error, Meta, Token};
 
@@ -17,21 +18,25 @@ use crate::config::customise_core::{ensure_unique_options, ConfigOption};
     \n\
     Expected parse stream format: `<KW> = <VAL>, <KW> = <VAL>, ...`"
 ))]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DeriveConfig {
+    // optfield does not rewrap `Option` by default, which is the desired behavior
+    // see https://docs.rs/optfield/latest/optfield/#rewrapping-option-fields
+    pub default_value: Option<Expr>,
     pub trim: bool,
 }
 impl Default for DeriveConfig {
     fn default() -> Self {
-        Self { trim: true }
+        Self { default_value: None, trim: true }
     }
 }
 #[cfg(feature = "customise")]
 impl DeriveConfig {
     /// Return a new instance of this config with customisations applied.
-    pub fn with_customisations(mut self, customisations: DeriveCustomisations) -> Self {
-        self.apply_customisations(customisations);
-        self
+    pub fn with_customisations(&self, customisations: DeriveCustomisations) -> Self {
+        let mut new = self.clone();
+        new.apply_customisations(customisations);
+        new
     }
 }
 
@@ -52,6 +57,9 @@ impl TryFrom<Vec<ConfigOption>> for DeriveCustomisations {
                     arg.kw_span(),
                     "This config option is not applicable to derive macros",
                 ))?,
+                O::Default(_, mode) => {
+                    config.default_value.replace(mode);
+                }
                 O::Trim(_, val) => {
                     config.trim.replace(val);
                 }

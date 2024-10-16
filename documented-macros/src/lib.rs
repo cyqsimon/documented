@@ -45,7 +45,24 @@ use crate::{
 /// With the `customise` feature enabled, you can customise this macro's
 /// behaviour using the `#[documented(...)]` attribute.
 ///
-/// Currently, you can disable line-trimming like so:
+/// Currently, you can:
+///
+/// ## 1. set a default value when doc comments are absent like so:
+///
+/// ```rust
+/// # use documented::Documented;
+/// #[derive(Documented)]
+/// #[documented(default = "The answer is fries.")]
+/// struct WhosTurnIsIt;
+///
+/// assert_eq!(WhosTurnIsIt::DOCS, "The answer is fries.");
+/// ```
+///
+/// This option is primarily designed for [`DocumentedFields`] and
+/// [`DocumentedVariants`], so it's probably not very useful here. But it could
+/// conceivably come in handy in some niche meta-programming contexts.
+///
+/// ## 2. disable line-trimming like so:
 ///
 /// ```rust
 /// # use documented::Documented;
@@ -138,7 +155,32 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 /// per-field configurations overriding container configurations, which
 /// override the default.
 ///
-/// Currently, you can (selectively) disable line-trimming like so:
+/// Currently, you can:
+///
+/// ## 1. set a default value when doc comments are absent like so:
+///
+/// ```rust
+/// # use documented::DocumentedFields;
+/// #[derive(DocumentedFields)]
+/// #[documented_fields(default = "Confusing the audience.")]
+/// struct SettingUpForTheNextGame {
+///     rh8: bool,
+///     ng8: bool,
+///     /// Always play:
+///     bf8: bool,
+/// }
+///
+// assert_eq!(
+//     SettingUpForTheNextGame::FIELD_DOCS,
+//     [
+//         "Confusing the audience.",
+//         "Confusing the audience.",
+//         "Always play:"
+//     ]
+// );
+/// ```
+///
+/// ## 2. (selectively) disable line-trimming like so:
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
@@ -209,7 +251,30 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 /// per-variant configurations overriding container configurations, which
 /// override the default.
 ///
-/// Currently, you can (selectively) disable line-trimming like so:
+/// Currently, you can:
+///
+/// ## 1. set a default value when doc comments are absent like so:
+///
+/// ```rust
+/// # use documented::DocumentedVariants;
+/// #[derive(DocumentedVariants)]
+/// #[documented_variants(default = "Still theory.")]
+/// enum OurHeroPlayed {
+///     G4Mate,
+///     OOOMate,
+///     /// Frankly ridiculous.
+///     Bf1g2Mate,
+/// }
+///
+/// assert_eq!(OurHeroPlayed::G4Mate.get_variant_docs(), "Still theory.");
+/// assert_eq!(OurHeroPlayed::OOOMate.get_variant_docs(), "Still theory.");
+/// assert_eq!(
+///     OurHeroPlayed::Bf1g2Mate.get_variant_docs(),
+///     "Frankly ridiculous."
+/// );
+/// ```
+///
+/// ## 2. (selectively) disable line-trimming like so:
 ///
 /// ```rust
 /// # use documented::DocumentedVariants;
@@ -306,7 +371,25 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
 /// ```
 ///
-/// ## 3. disable line-trimming like so:
+/// ## 3. set a default value when doc comments are absent like so:
+///
+/// ```rust
+/// use documented::docs_const;
+///
+/// #[docs_const(default = "In this position many of you blunder.")]
+/// trait StartingPosition {}
+///
+/// assert_eq!(
+///     STARTING_POSITION_DOCS,
+///     "In this position many of you blunder."
+/// );
+/// ```
+///
+/// This option is primarily designed for [`DocumentedFields`] and
+/// [`DocumentedVariants`], so it's probably not very useful here. But it could
+/// conceivably come in handy in some niche meta-programming contexts.
+///
+/// ## 4. disable line-trimming like so:
 ///
 /// ```rust
 /// # use documented::docs_const;

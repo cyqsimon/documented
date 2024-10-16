@@ -16,3 +16,17 @@ fn none_works() {
 
     assert_eq!(NotSoNice::DOCS, None);
 }
+
+#[cfg(feature = "customise")]
+mod test_customise {
+    use documented::DocumentedOpt;
+
+    #[test]
+    fn default_works() {
+        #[derive(DocumentedOpt)]
+        #[documented(default = Some("Nice catch!"))]
+        struct NiceFlight;
+
+        assert_eq!(NiceFlight::DOCS, Some("Nice catch!"));
+    }
+}

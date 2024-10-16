@@ -6,7 +6,8 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
-    spanned::Spanned, Data, DataEnum, DataStruct, DataUnion, DeriveInput, Error, Fields, Ident,
+    spanned::Spanned, Data, DataEnum, DataStruct, DataUnion, DeriveInput, Error, Expr, Fields,
+    Ident,
 };
 
 #[cfg(feature = "customise")]
@@ -35,27 +36,33 @@ impl ToTokens for DocType {
 }
 impl DocType {
     /// Get the closure that determines how to handle optional docs.
-    /// The closure takes two arguments:
+    /// The closure takes three arguments:
     ///
     /// 1. The optional doc comments on an item
-    /// 2. The token span on which to report any errors
+    /// 2. A default value optionally set by the user
+    /// 3. The token span on which to report any errors
     ///
     /// And fallibly returns the tokenised doc comments.
-    fn docs_handler_opt<S>(&self) -> Box<dyn Fn(Option<String>, S) -> syn::Result<TokenStream>>
+    #[allow(clippy::type_complexity)]
+    fn docs_handler_opt<S>(
+        &self,
+    ) -> Box<dyn Fn(Option<String>, Option<Expr>, S) -> syn::Result<TokenStream>>
     where
         S: ToTokens,
     {
         match self {
-            Self::Str => Box::new(|docs_opt, span| match docs_opt {
-                Some(docs) => Ok(quote! { #docs }),
-                None => Err(Error::new_spanned(span, "Missing doc comments")),
-            }),
-            Self::OptStr => Box::new(|docs_opt, _span| {
-                // quote macro needs some help with `Option`s
-                // see: https://github.com/dtolnay/quote/issues/213
-                let tokens = match docs_opt {
-                    Some(docs) => quote! { Some(#docs) },
-                    None => quote! { None },
+            Self::Str => Box::new(
+                |docs_opt, default_opt, span| match (docs_opt, default_opt) {
+                    (Some(docs), _) => Ok(quote! { #docs }),
+                    (None, Some(default)) => Ok(quote! { #default }),
+                    (None, None) => Err(Error::new_spanned(span, "Missing doc comments")),
+                },
+            ),
+            Self::OptStr => Box::new(|docs_opt, default_opt, _span| {
+                let tokens = match (docs_opt, default_opt) {
+                    (Some(docs), _) => quote! { Some(#docs) },
+                    (None, Some(default)) => quote! { #default },
+                    (None, None) => quote! { None },
                 };
                 Ok(tokens)
             }),
@@ -85,7 +92,7 @@ pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<Toke
         .map(|c| DeriveConfig::default().with_customisations(c))?;
 
     let docs = get_docs(&input.attrs, config.trim)
-        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, &input))?;
+        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, config.default_value, &input))?;
 
     Ok(quote! {
         #[automatically_derived]
@@ -128,12 +135,14 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
         .into_iter()
         .map(|(span, ident, attrs)| {
             #[cfg(not(feature = "customise"))]
-            let config = base_config;
+            let config = base_config.clone();
             #[cfg(feature = "customise")]
             let config = base_config
                 .with_customisations(get_customisations_from_attrs(&attrs, "documented_fields")?);
             get_docs(&attrs, config.trim)
-                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
+                .and_then(|docs_opt| {
+                    docs_ty.docs_handler_opt()(docs_opt, config.default_value, span)
+                })
                 .map(|docs| (ident, docs))
         })
         .collect::<syn::Result<Vec<_>>>()?
@@ -196,14 +205,14 @@ pub fn documented_variants_impl(input: DeriveInput, docs_ty: DocType) -> syn::Re
         .into_iter()
         .map(|v| {
             #[cfg(not(feature = "customise"))]
-            let config = base_config;
+            let config = base_config.clone();
             #[cfg(feature = "customise")]
             let config = base_config.with_customisations(get_customisations_from_attrs(
                 &v.attrs,
                 "documented_variants",
             )?);
             get_docs(&v.attrs, config.trim)
-                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, &v))
+                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, config.default_value, &v))
                 .map(|docs| (v.ident, v.fields, docs))
         })
         .collect::<syn::Result<Vec<_>>>()?;

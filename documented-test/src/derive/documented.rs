@@ -136,6 +136,35 @@ doge
     }
 
     #[test]
+    fn default_works_with_literal() {
+        #[derive(Documented)]
+        #[documented(default = "3 goals 2 assists!")]
+        struct Age37;
+
+        assert_eq!(Age37::DOCS, "3 goals 2 assists!");
+    }
+
+    #[test]
+    fn default_works_with_const() {
+        const DOC_STR: &str = "3 goals 2 assists!";
+
+        #[derive(Documented)]
+        #[documented(default = DOC_STR)]
+        struct Age37;
+
+        assert_eq!(Age37::DOCS, DOC_STR);
+    }
+
+    #[test]
+    fn default_works_with_macros() {
+        #[derive(Documented)]
+        #[documented(default = concat!("3 goals ", "2 assists!"))]
+        struct Age37;
+
+        assert_eq!(Age37::DOCS, "3 goals 2 assists!");
+    }
+
+    #[test]
     fn trim_false_works() {
         /** Wow
             much

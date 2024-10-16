@@ -3,7 +3,7 @@ use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
     spanned::Spanned,
-    Error, LitBool, LitStr, Token, Visibility,
+    Error, Expr, LitBool, LitStr, Token, Visibility,
 };
 
 mod kw {
@@ -11,6 +11,7 @@ mod kw {
 
     custom_keyword!(vis);
     custom_keyword!(name);
+    custom_keyword!(default);
     custom_keyword!(trim);
 }
 
@@ -36,6 +37,11 @@ pub enum ConfigOption {
     /// E.g. `name = "CUSTOM_NAME_DOCS"`.
     Name(kw::name, String),
 
+    /// Use some default value when doc comments are absent.
+    ///
+    /// E.g. `default = "not documented"`.
+    Default(kw::default, Expr),
+
     /// Trim each line or not.
     ///
     /// E.g. `trim = false`.
@@ -55,6 +61,11 @@ impl Parse for ConfigOption {
             input.parse::<Token![=]>()?;
             let name = input.parse::<LitStr>()?;
             Ok(Self::Name(kw, name.value()))
+        } else if lookahead.peek(kw::default) {
+            let kw = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let default = input.parse::<Expr>()?;
+            Ok(Self::Default(kw, default))
         } else if lookahead.peek(kw::trim) {
             let kw = input.parse()?;
             input.parse::<Token![=]>()?;
@@ -70,6 +81,7 @@ impl ConfigOption {
         match self {
             Self::Vis(kw, _) => kw.span(),
             Self::Name(kw, _) => kw.span(),
+            Self::Default(kw, _) => kw.span(),
             Self::Trim(kw, _) => kw.span(),
         }
     }

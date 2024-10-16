@@ -204,4 +204,23 @@ mod test_customise {
         assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
         assert_eq!(Doge::get_field_docs("doge"), Ok("     Wow, much doge"));
     }
+
+    #[test]
+    fn default_works() {
+        #[derive(DocumentedFields)]
+        #[documented_fields(default = "Woosh")]
+        #[allow(dead_code)]
+        enum Mission {
+            /// Rumble
+            Launch,
+            Boost,
+            // this is not very useful here, but for `*Opt` macros it is
+            #[documented_fields(default = "Boom")]
+            Touchdown,
+        }
+
+        assert_eq!(Mission::get_field_docs("Launch"), Ok("Rumble"));
+        assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
+        assert_eq!(Mission::get_field_docs("Touchdown"), Ok("Boom"));
+    }
 }

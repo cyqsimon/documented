@@ -69,3 +69,32 @@ fn union_works() {
         Err(Error::NoDocComments("third".into()))
     );
 }
+
+#[cfg(feature = "customise")]
+mod test_customise {
+    use documented::{DocumentedFieldsOpt, Error};
+
+    #[test]
+    fn default_works() {
+        #[derive(DocumentedFieldsOpt)]
+        #[documented_fields(default = Some("Woosh"))]
+        #[allow(dead_code)]
+        enum Mission {
+            /// Rumble
+            Launch,
+            Boost,
+            #[documented_fields(default = None)]
+            FreeFall,
+            #[documented_fields(default = Some("Boom"))]
+            Touchdown,
+        }
+
+        assert_eq!(Mission::get_field_docs("Launch"), Ok("Rumble"));
+        assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
+        assert_eq!(
+            Mission::get_field_docs("FreeFall"),
+            Err(Error::NoDocComments("FreeFall".into()))
+        );
+        assert_eq!(Mission::get_field_docs("Touchdown"), Ok("Boom"));
+    }
+}

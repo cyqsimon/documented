@@ -23,8 +23,11 @@ pub fn docs_const_impl(
 
     let (item_vis, item_name, attrs) = get_vis_name_attrs(&item)?;
 
-    let docs = get_docs(attrs, config.trim)?
-        .ok_or_else(|| Error::new_spanned(&item, "Missing doc comments"))?;
+    let docs = match (get_docs(attrs, config.trim)?, config.default_value) {
+        (Some(docs), _) => Ok(quote! { #docs }),
+        (None, Some(default)) => Ok(quote! { #default }),
+        (None, None) => Err(Error::new_spanned(&item, "Missing doc comments")),
+    }?;
 
     let const_vis = config.custom_vis.unwrap_or(item_vis);
     let const_name = config

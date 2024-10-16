@@ -194,4 +194,26 @@ mod test_customise {
         assert_eq!(Name::Doge.get_variant_docs(), "Wow");
         assert_eq!(Name::Kabuso.get_variant_docs(), "     RIP");
     }
+
+    #[test]
+    fn default_works() {
+        #[derive(DocumentedVariants)]
+        #[documented_variants(default = "RIP")]
+        #[allow(dead_code)]
+        enum Dead {
+            Maggie,
+            /// Maybe not yet?
+            DotIO,
+            // don't know why anyone would want to do this but it's supported
+            #[documented_variants(default = "I think you're more prepared than Noah")]
+            Sean,
+        }
+
+        assert_eq!(Dead::Maggie.get_variant_docs(), "RIP");
+        assert_eq!(Dead::DotIO.get_variant_docs(), "Maybe not yet?");
+        assert_eq!(
+            Dead::Sean.get_variant_docs(),
+            "I think you're more prepared than Noah"
+        );
+    }
 }
