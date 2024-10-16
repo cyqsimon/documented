@@ -105,8 +105,8 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 /// );
 /// ```
 ///
-/// You can also use [`get_field_docs`](Self::get_field_docs) to access the
-/// fields' documentation using their names.
+/// You can also use `DocumentedFields::get_field_docs` to access the fields'
+/// documentation using their names.
 ///
 /// ```rust
 /// # use documented::{DocumentedFields, Error};
@@ -285,8 +285,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// mod submodule {
-///     use documented::docs_const;
-///     
+///     # use documented::docs_const;
 ///     /// Boo!
 ///     #[docs_const(vis = pub)]
 ///     struct Wooooo;
@@ -299,8 +298,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ## 2. set a custom constant name like so:
 ///
 /// ```rust
-/// use documented::docs_const;
-///
+/// # use documented::docs_const;
 /// /// If you have a question raise your hand
 /// #[docs_const(name = "DONT_RAISE_YOUR_HAND")]
 /// mod whatever {}
@@ -311,8 +309,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ## 3. disable line-trimming like so:
 ///
 /// ```rust
-/// use documented::docs_const;
-///
+/// # use documented::docs_const;
 /// ///     This is a test constant
 /// #[docs_const(trim = false)]
 /// const test_const: u8 = 0;
