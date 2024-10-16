@@ -28,12 +28,12 @@ mod kw {
 pub enum ConfigOption {
     /// Custom visibility for the generated constant.
     ///
-    /// E.g. `vis = pub(crate)`
+    /// E.g. `vis = pub(crate)`.
     Vis(kw::vis, Visibility),
 
     /// Custom name for generated constant.
     ///
-    /// E.g. `name = "CUSTOM_NAME_DOCS"`
+    /// E.g. `name = "CUSTOM_NAME_DOCS"`.
     Name(kw::name, String),
 
     /// Trim each line or not.
@@ -46,7 +46,7 @@ impl Parse for ConfigOption {
         let lookahead = input.lookahead1();
 
         if lookahead.peek(kw::vis) {
-            let kw = input.parse::<kw::vis>()?;
+            let kw = input.parse()?;
             input.parse::<Token![=]>()?;
             let vis = input.parse::<Visibility>()?;
             Ok(Self::Vis(kw, vis))
