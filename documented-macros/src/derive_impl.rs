@@ -3,12 +3,10 @@
 //! All functions in this module use the dependency injection pattern to
 //! generate the correct trait implementation for both macro variants.
 
-use proc_macro::TokenStream;
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
-    parse_macro_input, spanned::Spanned, Data, DataEnum, DataStruct, DataUnion, DeriveInput, Error,
-    Fields, Ident,
+    spanned::Spanned, Data, DataEnum, DataStruct, DataUnion, DeriveInput, Error, Fields, Ident,
 };
 
 #[cfg(feature = "customise")]
@@ -27,7 +25,7 @@ pub enum DocType {
     OptStr,
 }
 impl ToTokens for DocType {
-    fn to_tokens(&self, ts: &mut TokenStream2) {
+    fn to_tokens(&self, ts: &mut TokenStream) {
         let tokens = match self {
             Self::Str => quote! { &'static str },
             Self::OptStr => quote! { Option<&'static str> },
@@ -43,7 +41,7 @@ impl DocType {
     /// 2. The span on which to report any errors
     ///
     /// And fallibly returns the tokenised doc comments.
-    fn docs_handler_opt(&self) -> Box<dyn Fn(Option<String>, Span) -> syn::Result<TokenStream2>> {
+    fn docs_handler_opt(&self) -> Box<dyn Fn(Option<String>, Span) -> syn::Result<TokenStream>> {
         match self {
             Self::Str => Box::new(|docs_opt, span| match docs_opt {
                 Some(docs) => Ok(quote! { #docs }),
@@ -72,9 +70,7 @@ impl DocType {
 }
 
 /// Shared implementation of `Documented` & `DocumentedOpt`.
-pub fn documented_impl(input: TokenStream, docs_ty: DocType) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
+pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
     let trait_ident = docs_ty.trait_ident_for("Documented");
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -82,31 +78,22 @@ pub fn documented_impl(input: TokenStream, docs_ty: DocType) -> TokenStream {
     #[cfg(not(feature = "customise"))]
     let config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let config = match get_customisations_from_attrs(&input.attrs, "documented") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
-    };
+    let config = get_customisations_from_attrs(&input.attrs, "documented")
+        .map(|c| DeriveConfig::default().with_customisations(c))?;
 
-    let docs = match get_docs(&input.attrs, config.trim)
-        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, ident.span()))
-    {
-        Ok(docs) => docs,
-        Err(e) => return e.into_compile_error().into(),
-    };
+    let docs = get_docs(&input.attrs, config.trim)
+        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, ident.span()))?;
 
-    quote! {
+    Ok(quote! {
         #[automatically_derived]
         impl #impl_generics documented::#trait_ident for #ident #ty_generics #where_clause {
             const DOCS: #docs_ty = #docs;
         }
-    }
-    .into()
+    })
 }
 
 /// Shared implementation of `DocumentedFields` & `DocumentedFieldsOpt`.
-pub fn documented_fields_impl(input: TokenStream, docs_ty: DocType) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
+pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
     let trait_ident = docs_ty.trait_ident_for("DocumentedFields");
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -115,48 +102,40 @@ pub fn documented_fields_impl(input: TokenStream, docs_ty: DocType) -> TokenStre
     #[cfg(not(feature = "customise"))]
     let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_fields") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
-    };
+    let base_config = get_customisations_from_attrs(&input.attrs, "documented_fields")
+        .map(|c| DeriveConfig::default().with_customisations(c))?;
 
-    let (field_idents, field_docs) = {
-        let fields_attrs: Vec<_> = match input.data.clone() {
-            Data::Enum(DataEnum { variants, .. }) => variants
-                .into_iter()
-                .map(|v| (v.span(), Some(v.ident), v.attrs))
-                .collect(),
-            Data::Struct(DataStruct { fields, .. }) => fields
-                .into_iter()
-                .map(|f| (f.span(), f.ident, f.attrs))
-                .collect(),
-            Data::Union(DataUnion { fields, .. }) => fields
-                .named
-                .into_iter()
-                .map(|f| (f.span(), f.ident, f.attrs))
-                .collect(),
-        };
-
-        match fields_attrs
+    let fields_attrs: Vec<_> = match input.data.clone() {
+        Data::Enum(DataEnum { variants, .. }) => variants
             .into_iter()
-            .map(|(span, ident, attrs)| {
-                #[cfg(not(feature = "customise"))]
-                let config = base_config;
-                #[cfg(feature = "customise")]
-                let config = base_config.with_customisations(get_customisations_from_attrs(
-                    &attrs,
-                    "documented_fields",
-                )?);
-                get_docs(&attrs, config.trim)
-                    .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
-                    .map(|docs| (ident, docs))
-            })
-            .collect::<syn::Result<Vec<_>>>()
-        {
-            Ok(t) => t.into_iter().unzip::<_, _, Vec<_>, Vec<_>>(),
-            Err(e) => return e.into_compile_error().into(),
-        }
+            .map(|v| (v.span(), Some(v.ident), v.attrs))
+            .collect(),
+        Data::Struct(DataStruct { fields, .. }) => fields
+            .into_iter()
+            .map(|f| (f.span(), f.ident, f.attrs))
+            .collect(),
+        Data::Union(DataUnion { fields, .. }) => fields
+            .named
+            .into_iter()
+            .map(|f| (f.span(), f.ident, f.attrs))
+            .collect(),
     };
+
+    let (field_idents, field_docs) = fields_attrs
+        .into_iter()
+        .map(|(span, ident, attrs)| {
+            #[cfg(not(feature = "customise"))]
+            let config = base_config;
+            #[cfg(feature = "customise")]
+            let config = base_config
+                .with_customisations(get_customisations_from_attrs(&attrs, "documented_fields")?);
+            get_docs(&attrs, config.trim)
+                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
+                .map(|docs| (ident, docs))
+        })
+        .collect::<syn::Result<Vec<_>>>()?
+        .into_iter()
+        .unzip::<_, _, Vec<_>, Vec<_>>();
 
     let phf_match_arms = field_idents
         .into_iter()
@@ -167,7 +146,7 @@ pub fn documented_fields_impl(input: TokenStream, docs_ty: DocType) -> TokenStre
 
     let documented_module_path = crate_module_path();
 
-    quote! {
+    Ok(quote! {
         #[automatically_derived]
         impl #impl_generics documented::#trait_ident for #ident #ty_generics #where_clause {
             const FIELD_DOCS: &'static [#docs_ty] = &[#(#field_docs),*];
@@ -181,14 +160,11 @@ pub fn documented_fields_impl(input: TokenStream, docs_ty: DocType) -> TokenStre
                 PHF.get(field_name.as_ref()).copied()
             }
         }
-    }
-    .into()
+    })
 }
 
 /// Shared implementation of `DocumentedVariants` & `DocumentedVariantsOpt`.
-pub fn documented_variants_impl(input: TokenStream, docs_ty: DocType) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
+pub fn documented_variants_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
     let trait_ident = docs_ty.trait_ident_for("DocumentedVariants");
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -197,42 +173,33 @@ pub fn documented_variants_impl(input: TokenStream, docs_ty: DocType) -> TokenSt
     #[cfg(not(feature = "customise"))]
     let base_config = DeriveConfig::default();
     #[cfg(feature = "customise")]
-    let base_config = match get_customisations_from_attrs(&input.attrs, "documented_variants") {
-        Ok(customisations) => DeriveConfig::default().with_customisations(customisations),
-        Err(err) => return err.into_compile_error().into(),
+    let base_config = get_customisations_from_attrs(&input.attrs, "documented_variants")
+        .map(|c| DeriveConfig::default().with_customisations(c))?;
+
+    let Data::Enum(DataEnum { variants, .. }) = input.data else {
+        Err(Error::new(
+            input.span(), // this targets the `struct`/`union` keyword
+            "DocumentedVariants can only be used on enums.\n\
+            For structs and unions, use DocumentedFields instead.",
+        ))?
     };
 
-    let variants_docs = {
-        let Data::Enum(DataEnum { variants, .. }) = input.data else {
-            return Error::new(
-                input.span(), // this targets the `struct`/`union` keyword
-                "DocumentedVariants can only be used on enums.\n\
-                For structs and unions, use DocumentedFields instead.",
-            )
-            .into_compile_error()
-            .into();
-        };
-        match variants
-            .into_iter()
-            .map(|v| (v.span(), v.ident, v.fields, v.attrs))
-            .map(|(span, ident, field, attrs)| {
-                #[cfg(not(feature = "customise"))]
-                let config = base_config;
-                #[cfg(feature = "customise")]
-                let config = base_config.with_customisations(get_customisations_from_attrs(
-                    &attrs,
-                    "documented_variants",
-                )?);
-                get_docs(&attrs, config.trim)
-                    .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
-                    .map(|docs| (ident, field, docs))
-            })
-            .collect::<syn::Result<Vec<_>>>()
-        {
-            Ok(t) => t,
-            Err(e) => return e.into_compile_error().into(),
-        }
-    };
+    let variants_docs = variants
+        .into_iter()
+        .map(|v| (v.span(), v.ident, v.fields, v.attrs))
+        .map(|(span, ident, field, attrs)| {
+            #[cfg(not(feature = "customise"))]
+            let config = base_config;
+            #[cfg(feature = "customise")]
+            let config = base_config.with_customisations(get_customisations_from_attrs(
+                &attrs,
+                "documented_variants",
+            )?);
+            get_docs(&attrs, config.trim)
+                .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, span))
+                .map(|docs| (ident, field, docs))
+        })
+        .collect::<syn::Result<Vec<_>>>()?;
 
     let match_arms = variants_docs
         .into_iter()
@@ -250,7 +217,7 @@ pub fn documented_variants_impl(input: TokenStream, docs_ty: DocType) -> TokenSt
     // because there isn't a way to get an enum's discriminant at compile time
     // if this becomes possible in the future, or alternatively you have a good workaround,
     // improvement suggestions are more than welcomed
-    quote! {
+    Ok(quote! {
         #[automatically_derived]
         impl #impl_generics documented::#trait_ident for #ident #ty_generics #where_clause {
             fn get_variant_docs(&self) -> #docs_ty {
@@ -259,6 +226,5 @@ pub fn documented_variants_impl(input: TokenStream, docs_ty: DocType) -> TokenSt
                 }
             }
         }
-    }
-    .into()
+    })
 }

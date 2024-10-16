@@ -6,7 +6,7 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{spanned::Spanned, Error, Ident, Item};
+use syn::{parse_macro_input, spanned::Spanned, Error, Ident, Item};
 
 #[cfg(feature = "customise")]
 use crate::config::attr::AttrCustomisations;
@@ -70,7 +70,9 @@ use crate::{
     proc_macro_derive(Documented, attributes(documented))
 )]
 pub fn documented(input: TokenStream) -> TokenStream {
-    documented_impl(input, DocType::Str)
+    documented_impl(parse_macro_input!(input), DocType::Str)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Derive proc-macro for `DocumentedOpt` trait.
@@ -82,7 +84,9 @@ pub fn documented(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedOpt, attributes(documented))
 )]
 pub fn documented_opt(input: TokenStream) -> TokenStream {
-    documented_impl(input, DocType::OptStr)
+    documented_impl(parse_macro_input!(input), DocType::OptStr)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Derive proc-macro for `DocumentedFields` trait.
@@ -164,7 +168,9 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedFields, attributes(documented_fields))
 )]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
-    documented_fields_impl(input, DocType::Str)
+    documented_fields_impl(parse_macro_input!(input), DocType::Str)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Derive proc-macro for `DocumentedFieldsOpt` trait.
@@ -176,7 +182,9 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedFieldsOpt, attributes(documented_fields))
 )]
 pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
-    documented_fields_impl(input, DocType::OptStr)
+    documented_fields_impl(parse_macro_input!(input), DocType::OptStr)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Derive proc-macro for `DocumentedVariants` trait.
@@ -234,7 +242,9 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedVariants, attributes(documented_variants))
 )]
 pub fn documented_variants(input: TokenStream) -> TokenStream {
-    documented_variants_impl(input, DocType::Str)
+    documented_variants_impl(parse_macro_input!(input), DocType::Str)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Derive proc-macro for `DocumentedVariantsOpt` trait.
@@ -246,7 +256,9 @@ pub fn documented_variants(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedVariantsOpt, attributes(documented_variants))
 )]
 pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
-    documented_variants_impl(input, DocType::OptStr)
+    documented_variants_impl(parse_macro_input!(input), DocType::OptStr)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
 }
 
 /// Macro to extract the documentation on any item that accepts doc comments
