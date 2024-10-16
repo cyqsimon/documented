@@ -14,7 +14,7 @@ version.workspace = true
 [dependencies]
 documented-macros = { path = "../documented-macros", version = "0.6.0" }
 phf = { version = "0.11", default-features = false, features = ["macros"] }
-thiserror = "1.0.58"
+thiserror = "1.0.64"
 
 [features]
 customise = ["documented-macros/customise"]
