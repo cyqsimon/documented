@@ -365,7 +365,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ```rust
 /// # use documented::docs_const;
 /// /// If you have a question raise your hand
-/// #[docs_const(name = "DONT_RAISE_YOUR_HAND")]
+/// #[docs_const(rename = "DONT_RAISE_YOUR_HAND")]
 /// mod whatever {}
 ///
 /// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
