@@ -1,17 +1,6 @@
 #[cfg(feature = "customise")]
 use optfield::optfield;
-#[cfg(feature = "customise")]
-use syn::{
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Token,
-};
 use syn::{Expr, Visibility};
-
-#[cfg(feature = "customise")]
-use crate::config::customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData};
-
-/// Configurable arguments for attribute macros.
 ///
 /// Initial values are set to default.
 #[cfg_attr(feature = "customise", optfield(
@@ -51,35 +40,48 @@ impl AttrConfig {
 }
 
 #[cfg(feature = "customise")]
-impl Parse for AttrCustomisations {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        use ConfigOptionData as Data;
+pub mod customise {
+    use syn::{
+        parse::{Parse, ParseStream},
+        punctuated::Punctuated,
+        Token,
+    };
 
-        let opts = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?
-            .into_iter()
-            .collect::<Vec<_>>();
+    use crate::config::{
+        attr::AttrCustomisations,
+        customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData},
+    };
 
-        ensure_unique_options(&opts)?;
+    impl Parse for AttrCustomisations {
+        fn parse(input: ParseStream) -> syn::Result<Self> {
+            use ConfigOptionData as Data;
 
-        let mut config = Self::default();
-        for opt in opts {
-            // I'd love to macro this if declarative macros can expand to a full match arm,
-            // but no: https://github.com/rust-lang/rfcs/issues/2654
-            match opt.data {
-                Data::Vis(vis) => {
-                    config.custom_vis.replace(vis);
-                }
-                Data::Rename(name) => {
-                    config.custom_name.replace(name.value());
-                }
-                Data::Default(expr) => {
-                    config.default_value.replace(expr);
-                }
-                Data::Trim(trim) => {
-                    config.trim.replace(trim.value());
+            let opts = Punctuated::<ConfigOption, Token![,]>::parse_terminated(input)?
+                .into_iter()
+                .collect::<Vec<_>>();
+
+            ensure_unique_options(&opts)?;
+
+            let mut config = Self::default();
+            for opt in opts {
+                // I'd love to macro this if declarative macros can expand to a full match arm,
+                // but no: https://github.com/rust-lang/rfcs/issues/2654
+                match opt.data {
+                    Data::Vis(vis) => {
+                        config.custom_vis.replace(vis);
+                    }
+                    Data::Rename(name) => {
+                        config.custom_name.replace(name.value());
+                    }
+                    Data::Default(expr) => {
+                        config.default_value.replace(expr);
+                    }
+                    Data::Trim(trim) => {
+                        config.trim.replace(trim.value());
+                    }
                 }
             }
+            Ok(config)
         }
-        Ok(config)
     }
 }
