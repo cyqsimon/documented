@@ -5,7 +5,7 @@ use syn::Expr;
 use syn::{punctuated::Punctuated, spanned::Spanned, Attribute, Error, Meta, Token};
 
 #[cfg(feature = "customise")]
-use crate::config::customise_core::{ensure_unique_options, ConfigOption};
+use crate::config::customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData};
 
 /// Configurable options for derive macros via helper attributes.
 ///
@@ -47,21 +47,21 @@ impl TryFrom<Vec<ConfigOption>> for DeriveCustomisations {
     type Error = syn::Error;
 
     /// Duplicate option rejection should be handled upstream.
-    fn try_from(args: Vec<ConfigOption>) -> Result<Self, Self::Error> {
-        use ConfigOption as O;
+    fn try_from(opts: Vec<ConfigOption>) -> Result<Self, Self::Error> {
+        use ConfigOptionData as Data;
 
         let mut config = Self::default();
-        for arg in args {
-            match arg {
-                O::Vis(..) | O::Name(..) => Err(Error::new(
-                    arg.kw_span(),
+        for opt in opts {
+            match opt.data {
+                Data::Vis(..) | Data::Name(..) => Err(Error::new(
+                    opt.span,
                     "This config option is not applicable to derive macros",
                 ))?,
-                O::Default(_, mode) => {
-                    config.default_value.replace(mode);
+                Data::Default(expr) => {
+                    config.default_value.replace(expr);
                 }
-                O::Trim(_, val) => {
-                    config.trim.replace(val);
+                Data::Trim(trim) => {
+                    config.trim.replace(trim.value());
                 }
             }
         }
