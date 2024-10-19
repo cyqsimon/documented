@@ -46,7 +46,7 @@ mod test_customise {
     #[test]
     fn rename_works() {
         /// Suspicious
-        #[docs_const(name = "NEVER_PLAY_F6")]
+        #[docs_const(rename = "NEVER_PLAY_F6")]
         #[allow(dead_code)]
         mod f6 {}
 

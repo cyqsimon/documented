@@ -53,7 +53,7 @@ impl TryFrom<Vec<ConfigOption>> for DeriveCustomisations {
         let mut config = Self::default();
         for opt in opts {
             match opt.data {
-                Data::Vis(..) | Data::Name(..) => Err(Error::new(
+                Data::Vis(..) | Data::Rename(..) => Err(Error::new(
                     opt.span,
                     "This config option is not applicable to derive macros",
                 ))?,

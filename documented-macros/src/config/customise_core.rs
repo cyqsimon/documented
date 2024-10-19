@@ -9,9 +9,13 @@ mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(vis);
-    custom_keyword!(name);
+    custom_keyword!(rename);
     custom_keyword!(default);
     custom_keyword!(trim);
+
+    // recognised old keywords
+    // error when used
+    custom_keyword!(name);
 }
 
 /// A configuration option that includes the span info. Each kind of
@@ -37,7 +41,7 @@ impl Parse for ConfigOption {
         input.parse::<Token![=]>()?;
         let data = match kind {
             Kind::Vis => Data::Vis(input.parse()?),
-            Kind::Name => Data::Name(input.parse()?),
+            Kind::Rename => Data::Rename(input.parse()?),
             Kind::Default => Data::Default(input.parse()?),
             Kind::Trim => Data::Trim(input.parse()?),
         };
@@ -62,8 +66,8 @@ pub enum ConfigOptionData {
 
     /// Custom name for generated constant.
     ///
-    /// E.g. `name = "CUSTOM_NAME_DOCS"`.
-    Name(LitStr),
+    /// E.g. `rename = "CUSTOM_NAME_DOCS"`.
+    Rename(LitStr),
 
     /// Use some default value when doc comments are absent.
     ///
@@ -82,15 +86,20 @@ impl Parse for ConfigOptionKind {
         let ty = if lookahead.peek(kw::vis) {
             input.parse::<kw::vis>()?;
             Self::Vis
-        } else if lookahead.peek(kw::name) {
-            input.parse::<kw::name>()?;
-            Self::Name
+        } else if lookahead.peek(kw::rename) {
+            input.parse::<kw::rename>()?;
+            Self::Rename
         } else if lookahead.peek(kw::default) {
             input.parse::<kw::default>()?;
             Self::Default
         } else if lookahead.peek(kw::trim) {
             input.parse::<kw::trim>()?;
             Self::Trim
+        } else if lookahead.peek(kw::name) {
+            Err(Error::new(
+                input.span(),
+                "`name` has been removed; use `rename` instead",
+            ))?
         } else {
             Err(lookahead.error())?
         };

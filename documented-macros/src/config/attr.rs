@@ -69,7 +69,7 @@ impl Parse for AttrCustomisations {
                 Data::Vis(vis) => {
                     config.custom_vis.replace(vis);
                 }
-                Data::Name(name) => {
+                Data::Rename(name) => {
                     config.custom_name.replace(name.value());
                 }
                 Data::Default(expr) => {
