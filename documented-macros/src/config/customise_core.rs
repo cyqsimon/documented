@@ -24,7 +24,7 @@ mod kw {
 /// Expected parse stream format: `<KW> = <VAL>`.
 #[derive(Clone, Debug)]
 pub struct ConfigOption {
-    /// The whole config span, from the keyword to the value.
+    /// The span over the keyword of the config option.
     pub span: Span,
 
     /// The config key-value pair.
