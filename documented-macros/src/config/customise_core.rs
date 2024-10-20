@@ -2,7 +2,9 @@ use itertools::Itertools;
 use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
-    Error, Expr, LitBool, LitStr, Token, Visibility,
+    punctuated::Punctuated,
+    spanned::Spanned,
+    Attribute, Error, Expr, LitBool, LitStr, Meta, Token, Visibility,
 };
 
 mod kw {
@@ -132,4 +134,37 @@ pub fn ensure_unique_options(opts: &[ConfigOption]) -> syn::Result<()> {
         }
     }
     Ok(())
+}
+
+/// Parse a list of attributes into a validated customisation.
+///
+/// `impl TryFrom<Vec<ConfigOption>>` and using this function is preferred to
+/// `impl syn::parse::Parse` directly for situations where the options can come
+/// from multiple attributes and therefore multiple `MetaList`s.
+pub fn get_customisations_from_attrs<T>(attrs: &[Attribute], attr_name: &str) -> syn::Result<T>
+where
+    T: TryFrom<Vec<ConfigOption>, Error = syn::Error>,
+{
+    let options = attrs
+        .iter()
+        // remove irrelevant attributes
+        .filter(|attr| attr.path().is_ident(attr_name))
+        // parse options
+        .map(|attr| match &attr.meta {
+            Meta::List(attr_inner) => {
+                attr_inner.parse_args_with(Punctuated::<ConfigOption, Token![,]>::parse_terminated)
+            }
+            other_form => Err(syn::Error::new(
+                other_form.span(),
+                format!("{attr_name} is not list-like. Expecting `{attr_name}(...)`"),
+            )),
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
+
+    ensure_unique_options(&options)?;
+
+    options.try_into()
 }

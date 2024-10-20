@@ -11,7 +11,7 @@ use syn::{
 };
 
 #[cfg(feature = "customise")]
-use crate::config::derive::customise::get_customisations_from_attrs;
+use crate::config::customise_core::get_customisations_from_attrs;
 use crate::{
     config::derive::DeriveConfig,
     util::{crate_module_path, get_docs},

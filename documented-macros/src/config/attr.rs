@@ -32,7 +32,7 @@ impl Default for AttrConfig {
 }
 
 #[cfg(feature = "customise")]
-pub mod customise {
+mod customise {
     use syn::{
         parse::{Parse, ParseStream},
         punctuated::Punctuated,

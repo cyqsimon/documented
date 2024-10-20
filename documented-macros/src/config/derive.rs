@@ -25,11 +25,9 @@ impl Default for DeriveConfig {
 }
 
 #[cfg(feature = "customise")]
-pub mod customise {
-    use syn::{punctuated::Punctuated, spanned::Spanned, Attribute, Error, Meta, Token};
-
+mod customise {
     use crate::config::{
-        customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData},
+        customise_core::{ConfigOption, ConfigOptionData},
         derive::{DeriveConfig, DeriveCustomisations},
     };
 
@@ -42,8 +40,6 @@ pub mod customise {
         }
     }
 
-    // This is implemented instead of `syn::parse::Parse` because the options
-    // can come from multiple attributes and therefore multiple `MetaList`s.
     impl TryFrom<Vec<ConfigOption>> for DeriveCustomisations {
         type Error = syn::Error;
 
@@ -54,7 +50,7 @@ pub mod customise {
             let mut config = Self::default();
             for opt in opts {
                 match opt.data {
-                    Data::Vis(..) | Data::Rename(..) => Err(Error::new(
+                    Data::Vis(..) | Data::Rename(..) => Err(syn::Error::new(
                         opt.span,
                         "This config option is not applicable to derive macros",
                     ))?,
@@ -68,32 +64,5 @@ pub mod customise {
             }
             Ok(config)
         }
-    }
-
-    pub fn get_customisations_from_attrs(
-        attrs: &[Attribute],
-        attr_name: &str,
-    ) -> syn::Result<DeriveCustomisations> {
-        let options = attrs
-            .iter()
-            // remove irrelevant attributes
-            .filter(|attr| attr.path().is_ident(attr_name))
-            // parse options
-            .map(|attr| match &attr.meta {
-                Meta::List(attr_inner) => attr_inner
-                    .parse_args_with(Punctuated::<ConfigOption, Token![,]>::parse_terminated),
-                other_form => Err(Error::new(
-                    other_form.span(),
-                    format!("{attr_name} is not list-like. Expecting `{attr_name}(...)`"),
-                )),
-            })
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .flatten()
-            .collect::<Vec<_>>();
-
-        ensure_unique_options(&options)?;
-
-        options.try_into()
     }
 }
