@@ -1,11 +1,9 @@
-#[cfg(feature = "customise")]
-use optfield::optfield;
 use syn::Expr;
 
 /// Configurable options for derive macros via helper attributes.
 ///
 /// Initial values are set to default.
-#[cfg_attr(feature = "customise", optfield(
+#[cfg_attr(feature = "customise", optfield::optfield(
     pub DeriveCustomisations,
     attrs = add(derive(Default)),
     merge_fn = pub apply_customisations,
@@ -25,15 +23,6 @@ impl Default for DeriveConfig {
         Self { default_value: None, trim: true }
     }
 }
-#[cfg(feature = "customise")]
-impl DeriveConfig {
-    /// Return a new instance of this config with customisations applied.
-    pub fn with_customisations(&self, customisations: DeriveCustomisations) -> Self {
-        let mut new = self.clone();
-        new.apply_customisations(customisations);
-        new
-    }
-}
 
 #[cfg(feature = "customise")]
 pub mod customise {
@@ -41,8 +30,17 @@ pub mod customise {
 
     use crate::config::{
         customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData},
-        derive::DeriveCustomisations,
+        derive::{DeriveConfig, DeriveCustomisations},
     };
+
+    impl DeriveConfig {
+        /// Return a new instance of this config with customisations applied.
+        pub fn with_customisations(&self, customisations: DeriveCustomisations) -> Self {
+            let mut new = self.clone();
+            new.apply_customisations(customisations);
+            new
+        }
+    }
 
     // This is implemented instead of `syn::parse::Parse` because the options
     // can come from multiple attributes and therefore multiple `MetaList`s.

@@ -1,11 +1,9 @@
-#[cfg(feature = "customise")]
-use optfield::optfield;
 use syn::{Expr, Visibility};
 
 /// Configurable options for attribute macros via helper attributes.
 ///
 /// Initial values are set to default.
-#[cfg_attr(feature = "customise", optfield(
+#[cfg_attr(feature = "customise", optfield::optfield(
     pub AttrCustomisations,
     attrs = add(derive(Default)),
     merge_fn = pub apply_customisations,
@@ -32,14 +30,6 @@ impl Default for AttrConfig {
         }
     }
 }
-#[cfg(feature = "customise")]
-impl AttrConfig {
-    /// Return a new instance of this config with customisations applied.
-    pub fn with_customisations(mut self, customisations: AttrCustomisations) -> Self {
-        self.apply_customisations(customisations);
-        self
-    }
-}
 
 #[cfg(feature = "customise")]
 pub mod customise {
@@ -50,9 +40,17 @@ pub mod customise {
     };
 
     use crate::config::{
-        attr::AttrCustomisations,
+        attr::{AttrConfig, AttrCustomisations},
         customise_core::{ensure_unique_options, ConfigOption, ConfigOptionData},
     };
+
+    impl AttrConfig {
+        /// Return a new instance of this config with customisations applied.
+        pub fn with_customisations(mut self, customisations: AttrCustomisations) -> Self {
+            self.apply_customisations(customisations);
+            self
+        }
+    }
 
     impl Parse for AttrCustomisations {
         fn parse(input: ParseStream) -> syn::Result<Self> {
