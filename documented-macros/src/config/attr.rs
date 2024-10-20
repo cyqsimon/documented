@@ -1,6 +1,8 @@
 #[cfg(feature = "customise")]
 use optfield::optfield;
 use syn::{Expr, Visibility};
+
+/// Configurable options for attribute macros via helper attributes.
 ///
 /// Initial values are set to default.
 #[cfg_attr(feature = "customise", optfield(
