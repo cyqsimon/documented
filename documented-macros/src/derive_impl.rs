@@ -137,8 +137,8 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
             #[cfg(not(feature = "customise"))]
             let config = base_config.clone();
             #[cfg(feature = "customise")]
-            let config = base_config
-                .with_customisations(get_customisations_from_attrs(&attrs, "documented_fields")?);
+            let config = get_customisations_from_attrs(&attrs, "documented_fields")
+                .map(|c| base_config.with_customisations(c))?;
             get_docs(&attrs, config.trim)
                 .and_then(|docs_opt| {
                     docs_ty.docs_handler_opt()(docs_opt, config.default_value, span)
@@ -207,10 +207,8 @@ pub fn documented_variants_impl(input: DeriveInput, docs_ty: DocType) -> syn::Re
             #[cfg(not(feature = "customise"))]
             let config = base_config.clone();
             #[cfg(feature = "customise")]
-            let config = base_config.with_customisations(get_customisations_from_attrs(
-                &v.attrs,
-                "documented_variants",
-            )?);
+            let config = get_customisations_from_attrs(&v.attrs, "documented_variants")
+                .map(|c| base_config.with_customisations(c))?;
             get_docs(&v.attrs, config.trim)
                 .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, config.default_value, &v))
                 .map(|docs| (v.ident, v.fields, docs))
