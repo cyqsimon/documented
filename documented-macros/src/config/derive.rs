@@ -1,3 +1,8 @@
+//! Generic configuration for derive macros.
+//!
+//! If a macro needs specialised configuration, this file can be used as a
+//! starting template.
+
 use syn::Expr;
 
 /// Configurable options for derive macros via helper attributes.
@@ -50,10 +55,9 @@ mod customise {
             let mut config = Self::default();
             for opt in opts {
                 match opt.data {
-                    Data::Vis(..) | Data::Rename(..) => Err(syn::Error::new(
-                        opt.span,
-                        "This config option is not applicable to derive macros",
-                    ))?,
+                    Data::Vis(..) | Data::RenameAll(..) | Data::Rename(..) => Err(
+                        syn::Error::new(opt.span, "This config option is not applicable here"),
+                    )?,
                     Data::Default(expr) => {
                         config.default_value.replace(expr);
                     }

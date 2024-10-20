@@ -157,7 +157,61 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///
 /// Currently, you can:
 ///
-/// ## 1. set a default value when doc comments are absent like so:
+/// ## 1. set a different case convention for `get_field_docs` like so:
+///
+/// ```rust
+/// # use documented::DocumentedFields;
+/// #[derive(DocumentedFields)]
+/// #[documented_fields(rename_all = "kebab-case")]
+/// struct BooksYouShouldWrite {
+///     /// It's my move?
+///     whose_turn_is_it: String,
+///     /// Isn't it checkmate?
+///     #[documented_fields(rename_all = "PascalCase")]
+///     how_many_legal_moves_do_you_have: String,
+/// }
+///
+/// assert_eq!(
+///     BooksYouShouldWrite::get_field_docs("whose-turn-is-it"),
+///     Ok("It's my move?")
+/// );
+/// assert_eq!(
+///     BooksYouShouldWrite::get_field_docs("HowManyLegalMovesDoYouHave"),
+///     Ok("Isn't it checkmate?")
+/// );
+/// ```
+///
+/// ## 2. set a custom name for a specific field for `get_field_docs` like so:
+///
+/// ```rust
+/// # use documented::DocumentedFields;
+/// #[derive(DocumentedFields)]
+/// // #[documented_field(rename = "fries")] // this is not allowed
+/// struct ThisPosition {
+///     /// I'm guessing, but I'm not really guessing.
+///     #[documented_fields(rename = "knows")]
+///     esserman_knows: bool,
+///     /// And that's true if you're van Wely.
+///     #[documented_fields(rename = "doesnt_know")]
+///     van_wely_doesnt: bool,
+/// }
+///
+/// assert_eq!(
+///     ThisPosition::get_field_docs("knows"),
+///     Ok("I'm guessing, but I'm not really guessing.")
+/// );
+/// assert_eq!(
+///     ThisPosition::get_field_docs("doesnt_know"),
+///     Ok("And that's true if you're van Wely.")
+/// );
+/// ```
+///
+/// Obviously this option is only available on each individual field.
+/// It makes no sense on the container.
+///
+/// This option also always takes priority over `rename_all`.
+///
+/// ## 3. set a default value when doc comments are absent like so:
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
@@ -180,7 +234,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 /// );
 /// ```
 ///
-/// ## 2. (selectively) disable line-trimming like so:
+/// ## 4. (selectively) disable line-trimming like so:
 ///
 /// ```rust
 /// # use documented::DocumentedFields;

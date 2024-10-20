@@ -11,6 +11,7 @@ mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(vis);
+    custom_keyword!(rename_all);
     custom_keyword!(rename);
     custom_keyword!(default);
     custom_keyword!(trim);
@@ -43,12 +44,52 @@ impl Parse for ConfigOption {
         input.parse::<Token![=]>()?;
         let data = match kind {
             Kind::Vis => Data::Vis(input.parse()?),
+            Kind::RenameAll => Data::RenameAll(input.parse()?),
             Kind::Rename => Data::Rename(input.parse()?),
             Kind::Default => Data::Default(input.parse()?),
             Kind::Trim => Data::Trim(input.parse()?),
         };
 
         Ok(Self { span, data })
+    }
+}
+
+/// All supported cases of `rename_all`.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct LitCase(convert_case::Case);
+impl Parse for LitCase {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        use convert_case::Case as C;
+
+        const SUPPORTED_CASES: [(&str, C); 8] = [
+            ("lowercase", C::Lower),
+            ("UPPERCASE", C::Upper),
+            ("PascalCase", C::Pascal),
+            ("camelCase", C::Camel),
+            ("snake_case", C::Snake),
+            ("SCREAMING_SNAKE_CASE", C::UpperSnake),
+            ("kebab-case", C::Kebab),
+            ("SCREAMING-KEBAB-CASE", C::UpperKebab),
+        ];
+
+        let arg = input.parse::<LitStr>()?;
+        let Some(case) = SUPPORTED_CASES
+            .into_iter()
+            .find_map(|(name, case)| (name == arg.value()).then_some(case))
+        else {
+            let options = SUPPORTED_CASES.map(|(name, _)| name).join(", ");
+            Err(Error::new(
+                arg.span(),
+                format!("Case must be one of {options}."),
+            ))?
+        };
+
+        Ok(Self(case))
+    }
+}
+impl LitCase {
+    pub fn value(&self) -> convert_case::Case {
+        self.0
     }
 }
 
@@ -66,9 +107,14 @@ pub enum ConfigOptionData {
     /// E.g. `vis = pub(crate)`.
     Vis(Visibility),
 
-    /// Custom name for generated constant.
+    /// Custom casing of key names for the generated constants.
     ///
-    /// E.g. `rename = "CUSTOM_NAME_DOCS"`.
+    /// E.g. `rename_all = "kebab-case"`.
+    RenameAll(LitCase),
+
+    /// Custom key name for the generated constant.
+    ///
+    /// E.g. `rename = "custom_field_name`, `rename = "CUSTOM_NAME_DOCS"`.
     Rename(LitStr),
 
     /// Use some default value when doc comments are absent.
@@ -88,6 +134,9 @@ impl Parse for ConfigOptionKind {
         let ty = if lookahead.peek(kw::vis) {
             input.parse::<kw::vis>()?;
             Self::Vis
+        } else if lookahead.peek(kw::rename_all) {
+            input.parse::<kw::rename_all>()?;
+            Self::RenameAll
         } else if lookahead.peek(kw::rename) {
             input.parse::<kw::rename>()?;
             Self::Rename

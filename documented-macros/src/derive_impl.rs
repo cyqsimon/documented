@@ -3,6 +3,7 @@
 //! All functions in this module use the dependency injection pattern to
 //! generate the correct trait implementation for both macro variants.
 
+use convert_case::Casing;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{
@@ -13,7 +14,10 @@ use syn::{
 #[cfg(feature = "customise")]
 use crate::config::customise_core::get_customisations_from_attrs;
 use crate::{
-    config::derive::DeriveConfig,
+    config::{
+        derive::DeriveConfig,
+        derive_fields::{DeriveFieldsConfig, RenameMode},
+    },
     util::{crate_module_path, get_docs},
 };
 
@@ -110,10 +114,10 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
 
     // `#[documented_fields(...)]` on container type
     #[cfg(not(feature = "customise"))]
-    let base_config = DeriveConfig::default();
+    let base_config = DeriveFieldsConfig::default();
     #[cfg(feature = "customise")]
     let base_config = get_customisations_from_attrs(&input.attrs, "documented_fields")
-        .map(|c| DeriveConfig::default().with_customisations(c))?;
+        .map(|c| DeriveFieldsConfig::default().with_base_customisations(c))?;
 
     let fields_attrs: Vec<_> = match input.data.clone() {
         Data::Enum(DataEnum { variants, .. }) => variants
@@ -131,29 +135,36 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
             .collect(),
     };
 
-    let (field_idents, field_docs) = fields_attrs
+    let (field_names, field_docs) = fields_attrs
         .into_iter()
         .map(|(span, ident, attrs)| {
             #[cfg(not(feature = "customise"))]
             let config = base_config.clone();
             #[cfg(feature = "customise")]
             let config = get_customisations_from_attrs(&attrs, "documented_fields")
-                .map(|c| base_config.with_customisations(c))?;
+                .map(|c| base_config.with_field_customisations(c))?;
+            let name = match config.rename_mode {
+                None => ident.map(|ident| ident.to_string()),
+                Some(RenameMode::ToCase(case)) => {
+                    ident.map(|ident| ident.to_string().to_case(case))
+                }
+                Some(RenameMode::Custom(name)) => Some(name),
+            };
             get_docs(&attrs, config.trim)
                 .and_then(|docs_opt| {
                     docs_ty.docs_handler_opt()(docs_opt, config.default_value, span)
                 })
-                .map(|docs| (ident, docs))
+                .map(|docs| (name, docs))
         })
         .collect::<syn::Result<Vec<_>>>()?
         .into_iter()
         .unzip::<_, _, Vec<_>, Vec<_>>();
 
-    let phf_match_arms = field_idents
+    let phf_match_arms = field_names
         .into_iter()
         .enumerate()
-        .filter_map(|(i, o)| o.map(|ident| (i, ident.to_string())))
-        .map(|(i, ident)| quote! { #ident => #i, })
+        .filter_map(|(i, name)| name.map(|n| (i, n)))
+        .map(|(i, name)| quote! { #name => #i, })
         .collect::<Vec<_>>();
 
     let documented_module_path = crate_module_path();

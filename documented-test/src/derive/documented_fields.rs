@@ -223,4 +223,51 @@ mod test_customise {
         assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
         assert_eq!(Mission::get_field_docs("Touchdown"), Ok("Boom"));
     }
+
+    #[test]
+    fn rename_and_rename_all_work() {
+        #[derive(DocumentedFields)]
+        #[documented_fields(rename_all = "SCREAMING-KEBAB-CASE")]
+        #[allow(dead_code)]
+        struct AlwaysWinning {
+            /// Gotta be opposite.
+            opposite_colour_bishops: bool,
+            /// Gotta have rooks.
+            #[documented_fields(rename_all = "lowercase", rename = "some-ROOKS")]
+            rooks: bool,
+            /// Gotta have some pawns.
+            #[documented_fields(rename_all = "kebab-case")]
+            some_pawns: bool,
+        }
+
+        assert_eq!(
+            AlwaysWinning::get_field_docs("OPPOSITE-COLOUR-BISHOPS"),
+            Ok("Gotta be opposite.")
+        );
+        assert_eq!(
+            AlwaysWinning::get_field_docs("some-ROOKS"),
+            Ok("Gotta have rooks.")
+        );
+        assert_eq!(
+            AlwaysWinning::get_field_docs("some-pawns"),
+            Ok("Gotta have some pawns.")
+        );
+    }
+
+    #[test]
+    fn can_set_name_for_unnamed_fields() {
+        #[derive(DocumentedFields)]
+        #[allow(dead_code)]
+        struct OkYouWin(
+            /// Leave me alone.
+            #[documented_fields(rename = "ahhh")]
+            (),
+            /// Just kidding.
+            usize,
+        );
+
+        assert_eq!(OkYouWin::FIELD_DOCS.len(), 2);
+        assert_eq!(OkYouWin::FIELD_DOCS, ["Leave me alone.", "Just kidding."]);
+        assert_eq!(OkYouWin::get_field_docs("ahhh"), Ok("Leave me alone."));
+    }
 }

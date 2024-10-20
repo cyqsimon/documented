@@ -67,6 +67,10 @@ mod customise {
                 // I'd love to macro this if declarative macros can expand to a full match arm,
                 // but no: https://github.com/rust-lang/rfcs/issues/2654
                 match opt.data {
+                    Data::RenameAll(..) => Err(syn::Error::new(
+                        opt.span,
+                        "This config option is not applicable here",
+                    ))?,
                     Data::Vis(vis) => {
                         config.custom_vis.replace(vis);
                     }
