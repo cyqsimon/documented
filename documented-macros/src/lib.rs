@@ -170,14 +170,14 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///     bf8: bool,
 /// }
 ///
-// assert_eq!(
-//     SettingUpForTheNextGame::FIELD_DOCS,
-//     [
-//         "Confusing the audience.",
-//         "Confusing the audience.",
-//         "Always play:"
-//     ]
-// );
+/// assert_eq!(
+///     SettingUpForTheNextGame::FIELD_DOCS,
+///     [
+///         "Confusing the audience.",
+///         "Confusing the audience.",
+///         "Always play:"
+///     ]
+/// );
 /// ```
 ///
 /// ## 2. (selectively) disable line-trimming like so:
