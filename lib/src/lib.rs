@@ -48,8 +48,11 @@ pub trait DocumentedFields {
     /// Get a field's documentation using its name.
     ///
     /// Note that for structs with anonymous fields (i.e. tuple structs), this
-    /// method will always return [`Error::NoSuchField`]. For this case, use
-    /// [`FIELD_DOCS`](Self::FIELD_DOCS) directly instead.
+    /// method will always return [`Error::NoSuchField`] by default. For this
+    /// case, you can either:
+    ///
+    /// 1. use [`FIELD_DOCS`](Self::FIELD_DOCS) directly instead;
+    /// 2. [set a custom name](macro@DocumentedFields#2-set-a-custom-name-for-a-specific-field-for-get_field_docs-like-so) for the anonymous field.
     fn get_field_docs<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
         let index = Self::__documented_get_index(field_name)
@@ -71,8 +74,11 @@ pub trait DocumentedFieldsOpt {
     /// Get a field's documentation using its name.
     ///
     /// Note that for structs with anonymous fields (i.e. tuple structs), this
-    /// method will always return [`Error::NoSuchField`]. For this case, use
-    /// [`FIELD_DOCS`](Self::FIELD_DOCS) directly instead.
+    /// method will always return [`Error::NoSuchField`] by default. For this
+    /// case, you can either:
+    ///
+    /// 1. use [`FIELD_DOCS`](Self::FIELD_DOCS) directly instead;
+    /// 2. [set a custom name](macro@DocumentedFields#2-set-a-custom-name-for-a-specific-field-for-get_field_docs-like-so) for the anonymous field.
     fn get_field_docs<T: AsRef<str>>(field_name: T) -> Result<&'static str, Error> {
         let field_name = field_name.as_ref();
         let index = Self::__documented_get_index(field_name)
