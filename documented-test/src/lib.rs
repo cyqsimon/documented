@@ -2,4 +2,3 @@
 
 mod attr;
 mod derive;
-mod readme;

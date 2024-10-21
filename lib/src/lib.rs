@@ -1,3 +1,5 @@
+#![doc = include_str!("../../README.md")]
+
 pub use documented_macros::{
     docs_const, Documented, DocumentedFields, DocumentedFieldsOpt, DocumentedOpt,
     DocumentedVariants, DocumentedVariantsOpt,
