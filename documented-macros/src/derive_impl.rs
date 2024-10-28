@@ -160,18 +160,19 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
         .into_iter()
         .unzip::<_, _, Vec<_>, Vec<_>>();
 
-    let phf_match_arms = field_names
+    let (field_names, phf_match_arms): (Vec<_>, Vec<_>) = field_names
         .into_iter()
         .enumerate()
-        .filter_map(|(i, name)| name.map(|n| (i, n)))
-        .map(|(i, name)| quote! { #name => #i, })
-        .collect::<Vec<_>>();
+        .filter_map(|(i, field)| field.map(|field| (i, field.as_str().to_token_stream())))
+        .map(|(i, name)| (name.clone(), quote! { #name => #i, }))
+        .unzip();
 
     let documented_module_path = crate_module_path();
 
     Ok(quote! {
         #[automatically_derived]
         impl #impl_generics documented::#trait_ident for #ident #ty_generics #where_clause {
+            const FIELD_NAMES: &'static [&'static str] = &[#(#field_names),*];
             const FIELD_DOCS: &'static [#docs_ty] = &[#(#field_docs),*];
 
             fn __documented_get_index<__Documented_T: AsRef<str>>(field_name: __Documented_T) -> Option<usize> {

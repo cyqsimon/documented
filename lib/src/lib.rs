@@ -42,6 +42,10 @@ pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed
     /// by field/variant order.
     const FIELD_DOCS: &'static [&'static str];
+    /// Field names, as accepted by the function [`Self::get_field_docs`]. Unnamed fields are omitted
+    /// so FIELD_NAMES indices may not match FIELD_DOCS indices. Use [Self::get_field_docs] to
+    /// get the associated docs
+    const FIELD_NAMES: &'static [&'static str];
 
     /// Method internally used by `documented`.
     #[doc(hidden)]
@@ -68,6 +72,8 @@ pub trait DocumentedFieldsOpt {
     /// The static doc comments on each field or variant of this type, indexed
     /// by field/variant order.
     const FIELD_DOCS: &'static [Option<&'static str>];
+    /// Field names, as accepted by the function [`Self::get_field_docs`]
+    const FIELD_NAMES: &'static [&'static str];
 
     /// Method internally used by `documented`.
     #[doc(hidden)]

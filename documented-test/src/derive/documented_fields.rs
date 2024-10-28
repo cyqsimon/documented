@@ -120,6 +120,7 @@ fn lifetimed_type_works() {
         foo: &'a u8,
     }
 
+    assert_eq!(Foo::FIELD_NAMES, &["foo"]);
     assert_eq!(Foo::get_field_docs("foo"), Ok("foo"));
 }
 
@@ -137,6 +138,7 @@ mod test_customise {
             coin: usize,
         }
 
+        assert_eq!(Doge::FIELD_NAMES, &["coin"]);
         assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
     }
 
@@ -153,6 +155,7 @@ mod test_customise {
             coin: usize,
         }
 
+        assert_eq!(Doge::FIELD_NAMES, &["coin"]);
         assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
     }
 
@@ -168,6 +171,7 @@ mod test_customise {
             doge: bool,
         }
 
+        assert_eq!(Doge::FIELD_NAMES, &["coin", "doge"]);
         assert_eq!(Doge::get_field_docs("coin"), Ok("     Wow, much coin"));
         assert_eq!(Doge::get_field_docs("doge"), Ok("     Wow, much doge"));
     }
@@ -184,6 +188,7 @@ mod test_customise {
             doge: bool,
         }
 
+        assert_eq!(Doge::FIELD_NAMES, &["coin", "doge"]);
         assert_eq!(Doge::get_field_docs("coin"), Ok("     Wow, much coin"));
         assert_eq!(Doge::get_field_docs("doge"), Ok("Wow, much doge"));
     }
@@ -201,6 +206,7 @@ mod test_customise {
             doge: bool,
         }
 
+        assert_eq!(Doge::FIELD_NAMES, &["coin", "doge"]);
         assert_eq!(Doge::get_field_docs("coin"), Ok("Wow, much coin"));
         assert_eq!(Doge::get_field_docs("doge"), Ok("     Wow, much doge"));
     }
@@ -219,6 +225,7 @@ mod test_customise {
             Touchdown,
         }
 
+        assert_eq!(Mission::FIELD_NAMES, &["Launch", "Boost", "Touchdown"]);
         assert_eq!(Mission::get_field_docs("Launch"), Ok("Rumble"));
         assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
         assert_eq!(Mission::get_field_docs("Touchdown"), Ok("Boom"));
@@ -240,6 +247,8 @@ mod test_customise {
             some_pawns: bool,
         }
 
+        assert_eq!(AlwaysWinning::FIELD_NAMES, &[
+            "OPPOSITE-COLOUR-BISHOPS", "some-ROOKS", "some-pawns"]);
         assert_eq!(
             AlwaysWinning::get_field_docs("OPPOSITE-COLOUR-BISHOPS"),
             Ok("Gotta be opposite.")
@@ -266,6 +275,7 @@ mod test_customise {
             usize,
         );
 
+        assert_eq!(OkYouWin::FIELD_NAMES, &["ahhh"]);
         assert_eq!(OkYouWin::FIELD_DOCS.len(), 2);
         assert_eq!(OkYouWin::FIELD_DOCS, ["Leave me alone.", "Just kidding."]);
         assert_eq!(OkYouWin::get_field_docs("ahhh"), Ok("Leave me alone."));
