@@ -92,7 +92,10 @@ mod test_customise {
             Touchdown,
         }
 
-        assert_eq!(Mission::FIELD_NAMES, vec!["Launch", "Boost", "FreeFall", "Touchdown"]);
+        assert_eq!(
+            Mission::FIELD_NAMES,
+            vec!["Launch", "Boost", "FreeFall", "Touchdown"]
+        );
         assert_eq!(Mission::get_field_docs("Launch"), Ok("Rumble"));
         assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
         assert_eq!(

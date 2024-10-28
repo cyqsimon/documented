@@ -247,8 +247,10 @@ mod test_customise {
             some_pawns: bool,
         }
 
-        assert_eq!(AlwaysWinning::FIELD_NAMES, &[
-            "OPPOSITE-COLOUR-BISHOPS", "some-ROOKS", "some-pawns"]);
+        assert_eq!(
+            AlwaysWinning::FIELD_NAMES,
+            &["OPPOSITE-COLOUR-BISHOPS", "some-ROOKS", "some-pawns"]
+        );
         assert_eq!(
             AlwaysWinning::get_field_docs("OPPOSITE-COLOUR-BISHOPS"),
             Ok("Gotta be opposite.")
