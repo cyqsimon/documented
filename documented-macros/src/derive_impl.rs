@@ -160,12 +160,12 @@ pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Resu
         .into_iter()
         .unzip::<_, _, Vec<_>, Vec<_>>();
 
-    let (field_names, phf_match_arms): (Vec<_>, Vec<_>) = field_names
+    let (field_names, phf_match_arms) = field_names
         .into_iter()
         .enumerate()
-        .filter_map(|(i, field)| field.map(|field| (i, field.as_str().to_token_stream())))
+        .filter_map(|(i, field)| field.map(|field| (i, field.as_str().to_owned())))
         .map(|(i, name)| (name.clone(), quote! { #name => #i, }))
-        .unzip();
+        .unzip::<_, _, Vec<_>, Vec<_>>();
 
     let documented_module_path = crate_module_path();
 

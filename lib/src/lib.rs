@@ -42,9 +42,15 @@ pub trait DocumentedFields {
     /// The static doc comments on each field or variant of this type, indexed
     /// by field/variant order.
     const FIELD_DOCS: &'static [&'static str];
-    /// Field names, as accepted by the function [`Self::get_field_docs`]. Unnamed fields are omitted
-    /// so FIELD_NAMES indices may not match FIELD_DOCS indices. Use [Self::get_field_docs] to
-    /// get the associated docs
+    /// Field names, as accepted by [`Self::get_field_docs`].
+    ///
+    /// Note that anonymous fields (i.e. fields in tuple structs), unless they
+    /// have [a custom name set](macro@DocumentedFields#2-set-a-custom-name-for-a-specific-field-for-get_field_docs-like-so),
+    /// will be omitted from `FIELD_NAMES`. This means that in such cases, the
+    /// indices of `FIELD_NAMES` will be misaligned with that of `FIELD_DOCS`.
+    ///
+    /// It is therefore recommended to use [`Self::get_field_docs`] rather than
+    /// the index to lookup the corresponding documentation.
     const FIELD_NAMES: &'static [&'static str];
 
     /// Method internally used by `documented`.
@@ -72,7 +78,15 @@ pub trait DocumentedFieldsOpt {
     /// The static doc comments on each field or variant of this type, indexed
     /// by field/variant order.
     const FIELD_DOCS: &'static [Option<&'static str>];
-    /// Field names, as accepted by the function [`Self::get_field_docs`]
+    /// Field names, as accepted by [`Self::get_field_docs`].
+    ///
+    /// Note that anonymous fields (i.e. fields in tuple structs), unless they
+    /// have [a custom name set](macro@DocumentedFields#2-set-a-custom-name-for-a-specific-field-for-get_field_docs-like-so),
+    /// will be omitted from `FIELD_NAMES`. This means that in such cases, the
+    /// indices of `FIELD_NAMES` will be misaligned with that of `FIELD_DOCS`.
+    ///
+    /// It is therefore recommended to use [`Self::get_field_docs`] rather than
+    /// the index to lookup the corresponding documentation.
     const FIELD_NAMES: &'static [&'static str];
 
     /// Method internally used by `documented`.
