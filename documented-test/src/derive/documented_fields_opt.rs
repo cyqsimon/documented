@@ -12,6 +12,7 @@ fn it_works() {
         third: i32,
     }
 
+    assert_eq!(Foo::FIELD_NAMES, vec!["first", "second", "third"]);
     assert_eq!(Foo::FIELD_DOCS.len(), 3);
     assert_eq!(Foo::get_field_docs("first"), Ok("1"));
     assert_eq!(
@@ -35,6 +36,7 @@ fn enum_works() {
         Second,
     }
 
+    assert_eq!(Bar::FIELD_NAMES, vec!["First", "Second"]);
     assert_eq!(Bar::FIELD_DOCS.len(), 2);
     assert_eq!(
         Bar::get_field_docs("First"),
@@ -58,6 +60,7 @@ fn union_works() {
         third: i32,
     }
 
+    assert_eq!(FooBar::FIELD_NAMES, vec!["first", "second", "third"]);
     assert_eq!(FooBar::FIELD_DOCS.len(), 3);
     assert_eq!(
         FooBar::get_field_docs("first"),
@@ -89,6 +92,10 @@ mod test_customise {
             Touchdown,
         }
 
+        assert_eq!(
+            Mission::FIELD_NAMES,
+            vec!["Launch", "Boost", "FreeFall", "Touchdown"]
+        );
         assert_eq!(Mission::get_field_docs("Launch"), Ok("Rumble"));
         assert_eq!(Mission::get_field_docs("Boost"), Ok("Woosh"));
         assert_eq!(
