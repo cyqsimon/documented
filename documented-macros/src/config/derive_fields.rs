@@ -8,7 +8,7 @@ use syn::Expr;
 #[allow(dead_code)]
 pub enum RenameMode {
     /// Use the original name, converted to another case.
-    ToCase(Case),
+    ToCase(Case<'static>),
     /// Use a custom name.
     Custom(String),
 }

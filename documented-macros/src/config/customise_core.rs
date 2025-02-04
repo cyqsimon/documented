@@ -56,7 +56,7 @@ impl Parse for ConfigOption {
 
 /// All supported cases of `rename_all`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct LitCase(convert_case::Case);
+pub struct LitCase(convert_case::Case<'static>);
 impl Parse for LitCase {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         use convert_case::Case as C;
@@ -88,7 +88,7 @@ impl Parse for LitCase {
     }
 }
 impl LitCase {
-    pub fn value(&self) -> convert_case::Case {
+    pub fn value(&self) -> convert_case::Case<'static> {
         self.0
     }
 }
