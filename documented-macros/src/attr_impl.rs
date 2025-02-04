@@ -32,7 +32,7 @@ pub fn docs_const_impl(
     let const_vis = config.custom_vis.unwrap_or(item_vis);
     let const_name = config
         .custom_name
-        .unwrap_or_else(|| format!("{}_DOCS", item_name.to_case(Case::ScreamingSnake)));
+        .unwrap_or_else(|| format!("{}_DOCS", item_name.to_case(Case::UpperSnake)));
     let const_ident = Ident::new(&const_name, Span::call_site());
 
     Ok(quote! {
