@@ -1,7 +1,4 @@
-// IMPRV: `CARGO_PKG_README` requires MSRV 1.70.0
-// see: https://github.com/rust-lang/cargo/pull/11645
-// also, this would obsolete `documented_test::readme`
-//#![doc = include_str!(concat!("../", std::env!("CARGO_PKG_README")))]
+#![doc = include_str!(concat!("../", std::env!("CARGO_PKG_README")))]
 
 pub use documented_macros::{
     docs_const, Documented, DocumentedFields, DocumentedFieldsOpt, DocumentedOpt,
