@@ -11,12 +11,12 @@ version.workspace = true
 proc-macro = true
 
 [dependencies]
-convert_case = "0.6.0"
+convert_case = "0.8.0"
 itertools = { version = "0.14.0", optional = true }
 optfield = { version = "0.4.0", optional = true }
 proc-macro2 = "1.0.88"
 quote = "1.0.37"
-strum = { version = "0.26.3", features = ["derive"], optional = true }
+strum = { version = "0.27.1", features = ["derive"], optional = true }
 syn = { version = "2.0.82", features = ["full", "extra-traits"] }
 
 [dev-dependencies]
