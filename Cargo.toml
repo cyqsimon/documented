@@ -17,3 +17,16 @@ readme = "README.md"
 repository = "https://github.com/cyqsimon/documented"
 rust-version = "1.70.0"
 version = "0.9.1"
+
+[workspace.dependencies]
+convert_case = "0.8.0"
+documented = { path = "lib" }
+documented-macros = { path = "documented-macros", version = "0.9.1" }
+itertools = "0.14.0"
+optfield = "0.4.0"
+phf = { version = "0.11", default-features = false, features = ["macros"] }
+proc-macro2 = "1.0.93"
+quote = "1.0.38"
+strum = { version = "0.26.3", features = ["derive"] }
+syn = { version = "2.0.98", features = ["full", "extra-traits"] }
+thiserror = "2.0.11"

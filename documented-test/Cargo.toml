@@ -6,7 +6,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dev-dependencies]
-documented = { path = "../lib" }
+documented.workspace = true
 
 [features]
 customise = ["documented/customise"]
