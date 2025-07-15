@@ -12,15 +12,20 @@ jobs:
     outputs:
       msrv: ${{ steps.get_msrv.outputs.msrv }}
     steps:
-      - name: Install ripgrep
-        run: sudo apt-get install -y ripgrep
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
       - name: Get MSRV
         id: get_msrv
-        run: rg '^\s*rust-version\s*=\s*"(\d+(\.\d+){0,2})"' --replace 'msrv=$1' Cargo.toml >> "$GITHUB_OUTPUT"
+        run: |
+          cargo metadata --format-version 1 \
+            | jq --raw-output '.packages[] | select(.name == "documented") | "msrv=" + .rust_version' \
+            >> "$GITHUB_OUTPUT"
 
   check:
     name: Run checks
