@@ -25,7 +25,7 @@ jobs:
         run: |
           cargo metadata --format-version 1 \
             | jq --raw-output '.packages[] | select(.name == "documented") | "msrv=" + .rust_version' \
-            >> "$GITHUB_OUTPUT"
+            | tee --append "$GITHUB_OUTPUT"
 
   check:
     name: Run checks
