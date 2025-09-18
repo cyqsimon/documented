@@ -10,9 +10,6 @@ fn it_works() {
     assert_eq!(TEST_FN_DOCS, "This is a test function");
 }
 
-// Note: I found no way to test whether the visibility of the item is preserved.
-// Manual testing showed that it is preserved, but I couldn't find a way to test it in code.
-
 #[test]
 fn multiple_docs_work() {
     /// This is a test function
