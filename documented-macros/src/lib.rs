@@ -51,10 +51,12 @@ use crate::{
 ///
 /// ```rust
 /// # use documented::Documented;
+/// # #[cfg(feature = "customise")]
 /// #[derive(Documented)]
 /// #[documented(default = "The answer is fries.")]
 /// struct WhosTurnIsIt;
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(WhosTurnIsIt::DOCS, "The answer is fries.");
 /// ```
 ///
@@ -66,11 +68,13 @@ use crate::{
 ///
 /// ```rust
 /// # use documented::Documented;
+/// # #[cfg(feature = "customise")]
 /// ///     Terrible.
 /// #[derive(Documented)]
 /// #[documented(trim = false)]
 /// struct Frankly;
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(Frankly::DOCS, "     Terrible.");
 /// ```
 ///
@@ -161,6 +165,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedFields)]
 /// #[documented_fields(rename_all = "kebab-case")]
 /// struct BooksYouShouldWrite {
@@ -171,10 +176,12 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///     how_many_legal_moves_do_you_have: String,
 /// }
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     BooksYouShouldWrite::get_field_docs("whose-turn-is-it"),
 ///     Ok("It's my move?")
 /// );
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     BooksYouShouldWrite::get_field_docs("HowManyLegalMovesDoYouHave"),
 ///     Ok("Isn't it checkmate?")
@@ -185,6 +192,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedFields)]
 /// // #[documented_field(rename = "fries")] // this is not allowed
 /// struct ThisPosition {
@@ -196,10 +204,12 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///     van_wely_doesnt: bool,
 /// }
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     ThisPosition::get_field_docs("knows"),
 ///     Ok("I'm guessing, but I'm not really guessing.")
 /// );
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     ThisPosition::get_field_docs("doesnt_know"),
 ///     Ok("And that's true if you're van Wely.")
@@ -215,6 +225,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedFields)]
 /// #[documented_fields(default = "Confusing the audience.")]
 /// struct SettingUpForTheNextGame {
@@ -224,6 +235,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///     bf8: bool,
 /// }
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     SettingUpForTheNextGame::FIELD_DOCS,
 ///     [
@@ -238,6 +250,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedFields;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedFields)]
 /// #[documented_fields(trim = false)]
 /// struct Frankly {
@@ -248,6 +261,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 ///     fried_liver: bool,
 /// }
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(Frankly::FIELD_DOCS, ["     Delicious.", "I'm vegan."]);
 /// ```
 ///
@@ -311,6 +325,7 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedVariants;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedVariants)]
 /// #[documented_variants(default = "Still theory.")]
 /// enum OurHeroPlayed {
@@ -320,8 +335,11 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 ///     Bf1g2Mate,
 /// }
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(OurHeroPlayed::G4Mate.get_variant_docs(), "Still theory.");
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(OurHeroPlayed::OOOMate.get_variant_docs(), "Still theory.");
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     OurHeroPlayed::Bf1g2Mate.get_variant_docs(),
 ///     "Frankly ridiculous."
@@ -332,6 +350,7 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::DocumentedVariants;
+/// # #[cfg(feature = "customise")]
 /// #[derive(DocumentedVariants)]
 /// #[documented_variants(trim = false)]
 /// enum Always {
@@ -341,10 +360,12 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 ///     #[documented_variants(trim = true)]
 ///     Retreat,
 /// }
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     Always::SacTheExchange.get_variant_docs(),
 ///     "     Or the quality."
 /// );
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(Always::Retreat.get_variant_docs(), "Like a Frenchman.");
 /// ```
 ///
@@ -403,6 +424,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ## 1. set a custom constant visibility like so:
 ///
 /// ```rust
+/// # #[cfg(feature = "customise")]
 /// mod submodule {
 ///     # use documented::docs_const;
 ///     /// Boo!
@@ -411,6 +433,7 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// // notice how the constant can be seen from outside
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(submodule::WOOOOO_DOCS, "Boo!");
 /// ```
 ///
@@ -419,9 +442,11 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ```rust
 /// # use documented::docs_const;
 /// /// If you have a question raise your hand
+/// # #[cfg(feature = "customise")]
 /// #[docs_const(rename = "DONT_RAISE_YOUR_HAND")]
 /// mod whatever {}
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(DONT_RAISE_YOUR_HAND, "If you have a question raise your hand");
 /// ```
 ///
@@ -430,9 +455,11 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// ```rust
 /// use documented::docs_const;
 ///
+/// # #[cfg(feature = "customise")]
 /// #[docs_const(default = "In this position many of you blunder.")]
 /// trait StartingPosition {}
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(
 ///     STARTING_POSITION_DOCS,
 ///     "In this position many of you blunder."
@@ -447,10 +474,12 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 ///
 /// ```rust
 /// # use documented::docs_const;
+/// # #[cfg(feature = "customise")]
 /// ///     This is a test constant
 /// #[docs_const(trim = false)]
 /// const test_const: u8 = 0;
 ///
+/// # #[cfg(feature = "customise")]
 /// assert_eq!(TEST_CONST_DOCS, "     This is a test constant");
 /// ```
 ///
