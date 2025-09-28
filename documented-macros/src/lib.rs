@@ -45,7 +45,11 @@ use crate::{
 /// With the `customise` feature enabled, you can customise this macro's
 /// behaviour using the `#[documented(...)]` attribute.
 ///
-/// Currently, you can:
+/// Multiple option can be specified in a list like so:
+/// `#[documented(default = "FOO", trim = false)]`.
+///
+/// If there are other configuration options you wish to have, please submit an
+/// issue or a PR.
 ///
 /// ## 1. set a default value when doc comments are absent like so:
 ///
@@ -77,9 +81,6 @@ use crate::{
 /// # #[cfg(feature = "customise")]
 /// assert_eq!(Frankly::DOCS, "     Terrible.");
 /// ```
-///
-/// If there are other configuration options you wish to have, please submit an
-/// issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(Documented))]
 #[cfg_attr(
     feature = "customise",
@@ -159,7 +160,11 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 /// per-field configurations overriding container configurations, which
 /// override the default.
 ///
-/// Currently, you can:
+/// Multiple option can be specified in a list like so:
+/// `#[documented_fields(rename_all = "camelCase", trim = false)]`.
+///
+/// If there are other configuration options you wish to have, please submit an
+/// issue or a PR.
 ///
 /// ## 1. set a different case convention for `get_field_docs` like so:
 ///
@@ -264,9 +269,6 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
 /// # #[cfg(feature = "customise")]
 /// assert_eq!(Frankly::FIELD_DOCS, ["     Delicious.", "I'm vegan."]);
 /// ```
-///
-/// If there are other configuration options you wish to have, please
-/// submit an issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedFields))]
 #[cfg_attr(
     feature = "customise",
@@ -319,7 +321,11 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 /// per-variant configurations overriding container configurations, which
 /// override the default.
 ///
-/// Currently, you can:
+/// Multiple option can be specified in a list like so:
+/// `#[documented_variants(default = "FOO", trim = false)]`.
+///
+/// If there are other configuration options you wish to have, please submit an
+/// issue or a PR.
 ///
 /// ## 1. set a default value when doc comments are absent like so:
 ///
@@ -368,9 +374,6 @@ pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
 /// # #[cfg(feature = "customise")]
 /// assert_eq!(Always::Retreat.get_variant_docs(), "Like a Frenchman.");
 /// ```
-///
-/// If there are other configuration options you wish to have, please
-/// submit an issue or a PR.
 #[cfg_attr(not(feature = "customise"), proc_macro_derive(DocumentedVariants))]
 #[cfg_attr(
     feature = "customise",
@@ -419,7 +422,11 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// With the `customise` feature enabled, you can customise this macro's
 /// behaviour using attribute arguments.
 ///
-/// Currently, you can:
+/// Multiple option can be specified in a list like so:
+/// `#[docs_const(vis = pub(crate), trim = false)]`.
+///
+/// If there are other configuration options you wish to have, please submit an
+/// issue or a PR.
 ///
 /// ## 1. set a custom constant visibility like so:
 ///
@@ -482,14 +489,6 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 /// # #[cfg(feature = "customise")]
 /// assert_eq!(TEST_CONST_DOCS, "     This is a test constant");
 /// ```
-///
-/// ---
-///
-/// Multiple option can be specified in a list like so:
-/// `name = "FOO", trim = false`.
-///
-/// If there are other configuration options you wish to have, please
-/// submit an issue or a PR.
 #[proc_macro_attribute]
 pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(not(feature = "customise"))]
