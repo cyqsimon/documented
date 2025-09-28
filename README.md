@@ -8,10 +8,11 @@ Derive and attribute macros for accessing your type's documentation at runtime
 ## Quick start
 
 ```rust
-use documented::{Documented, DocumentedFields, DocumentedVariants};
+use documented::{Documented, DocumentedFields, DocumentedVariants, docs_const};
 
 /// Trying is the first step to failure.
 #[derive(Documented, DocumentedFields, DocumentedVariants)]
+#[docs_const]
 enum AlwaysPlay {
     /// And Kb8.
     #[allow(dead_code)]
@@ -35,4 +36,7 @@ assert_eq!(
     AlwaysPlay::F6.get_variant_docs(),
     "But only if you are white."
 );
+
+// docs_const
+assert_eq!(ALWAYS_PLAY_DOCS, "Trying is the first step to failure.");
 ```
