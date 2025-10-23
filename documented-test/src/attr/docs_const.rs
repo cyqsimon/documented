@@ -19,7 +19,10 @@ fn multiple_docs_work() {
     #[allow(dead_code)]
     fn test_fn() {}
 
-    assert_eq!(TEST_FN_DOCS, "This is a test function\nThis is the second line of the doc\nThis is the third line of the doc");
+    assert_eq!(
+        TEST_FN_DOCS,
+        "This is a test function\nThis is the second line of the doc\nThis is the third line of the doc"
+    );
 }
 
 #[cfg(feature = "customise")]

@@ -56,7 +56,6 @@ jobs:
           cargo clippy --workspace -- -D warnings
           cargo clippy --workspace --no-default-features -- -D warnings
 
-
       - name: Run tests
         run: |
           cargo test --workspace
