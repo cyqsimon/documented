@@ -15,11 +15,11 @@ keywords = ["documentation", "proc-macro", "reflection"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/cyqsimon/documented"
-rust-version = "1.70.0"
+rust-version = "1.71.0"
 version = "0.9.2"
 
 [workspace.dependencies]
-convert_case = "0.10.0"
+convert_case = "0.11.0"
 documented = { path = "lib", default-features = false }
 documented-macros = { path = "documented-macros", version = "0.9.2" }
 itertools = "0.14.0"
@@ -27,6 +27,6 @@ optfield = "0.4.0"
 phf = { version = "0.13", default-features = false, features = ["macros"] }
 proc-macro2 = "1.0.95"
 quote = "1.0.40"
-strum = { version = "0.27.1", features = ["derive"] }
+strum = { version = "0.28.0", features = ["derive"] }
 syn = { version = "2.0.104", features = ["full", "extra-traits"] }
 thiserror = "2.0.12"
