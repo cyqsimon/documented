@@ -17,5 +17,7 @@ phf.workspace = true
 thiserror.workspace = true
 
 [features]
+# Allow customising the behaviour of macros using attribute arguments
+# See `Configuration` section of macro documentation for details
 customise = ["documented-macros/customise"]
 default = ["customise"]
