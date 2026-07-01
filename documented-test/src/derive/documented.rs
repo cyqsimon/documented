@@ -37,6 +37,17 @@ mod test_use {
     }
 
     #[test]
+    fn macro_form_works() {
+        /// Famous saying:
+        #[doc = concat!("something something", " death and taxes")]
+        #[derive(Documented)]
+        struct FactOfLife;
+
+        let docs = "Famous saying:\nsomething something death and taxes";
+        assert_eq!(FactOfLife::DOCS, docs)
+    }
+
+    #[test]
     fn generic_type_works() {
         /// Wow
         #[allow(dead_code)]
