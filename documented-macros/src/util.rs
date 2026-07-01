@@ -93,7 +93,7 @@ pub fn get_docs(attrs: &[Attribute], trim: bool) -> syn::Result<Option<DocConten
             }
             _ => None,
         })
-        .try_fold(vec![], |mut docs, expr| -> syn::Result<_> {
+        .try_fold(None, |docs: Option<Vec<_>>, expr| -> syn::Result<_> {
             let val = match expr {
                 Expr::Lit(ExprLit { lit: Lit::Str(lit), .. }) => {
                     let maybe_trimmed = if trim {
@@ -114,6 +114,7 @@ pub fn get_docs(attrs: &[Attribute], trim: bool) -> syn::Result<Option<DocConten
                 ))?,
             };
 
+            let mut docs = docs.unwrap_or_default();
             match docs.as_mut_slice() {
                 // always push first element
                 [] => {
@@ -133,12 +134,7 @@ pub fn get_docs(attrs: &[Attribute], trim: bool) -> syn::Result<Option<DocConten
                 },
             }
 
-            Ok(docs)
+            Ok(Some(docs))
         })?;
-
-    if content.is_empty() {
-        Ok(None)
-    } else {
-        Ok(Some(DocContent(content)))
-    }
+    Ok(content.map(DocContent))
 }
