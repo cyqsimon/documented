@@ -51,12 +51,15 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+      - name: Generate lockfile
+        run: .github/scripts/generate-lockfile.sh
+
       - name: Run clippy
         run: |
-          cargo clippy --workspace -- -D warnings
-          cargo clippy --workspace --no-default-features -- -D warnings
+          cargo clippy --locked -- -D warnings
+          cargo clippy --locked --no-default-features -- -D warnings
 
       - name: Run tests
         run: |
-          cargo test --workspace
-          cargo test --workspace --no-default-features
+          cargo test --locked
+          cargo test --locked --no-default-features
