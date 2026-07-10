@@ -18,7 +18,7 @@ use crate::{
         derive::DeriveConfig,
         derive_fields::{DeriveFieldsConfig, RenameMode},
     },
-    util::{crate_module_path, get_docs},
+    util::{crate_module_path, get_docs, DocContent},
 };
 
 /// The type of the doc comment.
@@ -50,7 +50,7 @@ impl DocType {
     #[allow(clippy::type_complexity)]
     fn docs_handler_opt<S>(
         &self,
-    ) -> Box<dyn Fn(Option<String>, Option<Expr>, S) -> syn::Result<TokenStream>>
+    ) -> Box<dyn Fn(Option<DocContent>, Option<Expr>, S) -> syn::Result<TokenStream>>
     where
         S: ToTokens,
     {

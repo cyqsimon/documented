@@ -1,5 +1,7 @@
 #![doc = include_str!(concat!("../", std::env!("CARGO_PKG_README")))]
 
+pub mod _caveats;
+
 pub use documented_macros::{
     docs_const, Documented, DocumentedFields, DocumentedFieldsOpt, DocumentedOpt,
     DocumentedVariants, DocumentedVariantsOpt,

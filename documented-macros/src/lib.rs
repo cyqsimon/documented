@@ -23,7 +23,7 @@ use crate::{
 /// ///
 /// /** Multi-line doc comments are supported too.
 ///     Each line of the multi-line block is individually trimmed by default.
-///     Note the lack of spaces in front of this line.
+///     Note the lack of spaces in front of this line. (See `_caveats` module.)
 /// */
 /// #[doc = "Attribute-style documentation is supported too."]
 /// #[derive(Documented)]
@@ -34,7 +34,7 @@ use crate::{
 ///
 /// Multi-line doc comments are supported too.
 /// Each line of the multi-line block is individually trimmed by default.
-/// Note the lack of spaces in front of this line.
+/// Note the lack of spaces in front of this line. (See `_caveats` module.)
 ///
 /// Attribute-style documentation is supported too.";
 /// assert_eq!(BornIn69::DOCS, doc_str);
