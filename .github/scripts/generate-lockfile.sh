@@ -8,19 +8,22 @@
 
 set -e
 
+# allow overriding cargo binary
+: "${CARGO_BIN:=cargo}"
+
 RESOLVER_V3_MIN_VERSION='1.84.0'
-VERSION="$(cargo --version | cut -d' ' -f2)"
+VERSION="$($CARGO_BIN --version | cut -d' ' -f2)"
 
 LOWER_VERSION="$(echo -e "$RESOLVER_V3_MIN_VERSION\n$VERSION" | sort --version-sort | head -n1)"
 
 if [[ "$LOWER_VERSION" == "$RESOLVER_V3_MIN_VERSION" ]]; then
-    cargo generate-lockfile
+    $CARGO_BIN generate-lockfile
 else
     # must declare workspace resolver, or it defaults to v1
     sed -Ei '/resolver ?=/ s/3/2/' Cargo.toml
 
-    cargo generate-lockfile
+    $CARGO_BIN generate-lockfile
 
     # manually downgrade dependencies to compatible versions
-    cargo update --package unicode-segmentation --precise 1.12.0
+    $CARGO_BIN update --package unicode-segmentation --precise 1.12.0
 fi
