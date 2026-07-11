@@ -48,11 +48,11 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: clippy, rustfmt
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
       - name: Generate lockfile
         run: .github/scripts/generate-lockfile.sh
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
       - name: Run clippy
         run: |
