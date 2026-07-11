@@ -24,7 +24,9 @@ documented = { path = "lib", default-features = false }
 documented-macros = { path = "documented-macros", version = "0.10.0" }
 itertools = "0.15.0"
 optfield = "0.4.0"
-phf = { version = "0.13", default-features = false, features = ["macros"] }
+phf = { version = ">=0.13, <0.15", default-features = false, features = [
+    "macros",
+] }
 proc-macro2 = "1.0.95"
 quote = "1.0.40"
 strum = { version = "0.28.0", features = ["derive"] }

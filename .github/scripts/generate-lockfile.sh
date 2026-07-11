@@ -25,5 +25,6 @@ else
     $CARGO_BIN generate-lockfile
 
     # manually downgrade dependencies to compatible versions
+    $CARGO_BIN update --package phf --precise 0.13.1
     $CARGO_BIN update --package unicode-segmentation --precise 1.12.0
 fi
