@@ -115,23 +115,12 @@ pub fn get_docs(attrs: &[Attribute], trim: bool) -> syn::Result<Option<DocConten
             };
 
             let mut docs = docs.unwrap_or_default();
-            match docs.as_mut_slice() {
-                // always push first element
-                [] => {
-                    docs.push(val);
-                }
-                // try to fold subsequent elements
-                [.., tail] => match (tail, &val) {
-                    // fold consecutive literals
-                    (DocValue::Lit(tail), DocValue::Lit(lit)) => {
-                        tail.push('\n');
-                        tail.push_str(lit);
-                    }
-                    // simple push otherwise
-                    (_, _) => {
-                        docs.push(val);
-                    }
-                },
+            if let ([.., DocValue::Lit(tail)], DocValue::Lit(lit)) = (docs.as_mut_slice(), &val) {
+                // fold consecutive literal forms
+                tail.push('\n');
+                tail.push_str(lit);
+            } else {
+                docs.push(val);
             }
 
             Ok(Some(docs))
