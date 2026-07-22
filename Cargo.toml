@@ -30,5 +30,5 @@ phf = { version = ">=0.13, <0.15", default-features = false, features = [
 proc-macro2 = "1.0.95"
 quote = "1.0.40"
 strum = { version = "0.28.0", features = ["derive"] }
-syn = { version = "2.0.104", features = ["full", "extra-traits"] }
+syn = { version = ">=2, <=3", features = ["full", "extra-traits"] }
 thiserror = "2.0.12"
