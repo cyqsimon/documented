@@ -42,6 +42,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      # needed for generating lockfile using resolver v3
+      - name: Install stable Rust
+        if: ${{ matrix.rust == needs.get-msrv.outputs.msrv }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      # this overrides the default toolchain from the previous step
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:

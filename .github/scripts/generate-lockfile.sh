@@ -10,6 +10,9 @@ set -e
 
 # allow overriding cargo binary
 : "${CARGO_BIN:=cargo}"
+echo "\`$CARGO_BIN --version\`: $($CARGO_BIN --version)"
+: "${CARGO_STABLE_BIN:=cargo +stable}"
+echo "\`$CARGO_STABLE_BIN --version\`: $($CARGO_STABLE_BIN --version)"
 
 RESOLVER_V3_MIN_VERSION='1.84.0'
 VERSION="$($CARGO_BIN --version | cut -d' ' -f2)"
@@ -19,12 +22,10 @@ LOWER_VERSION="$(echo -e "$RESOLVER_V3_MIN_VERSION\n$VERSION" | sort --version-s
 if [[ "$LOWER_VERSION" == "$RESOLVER_V3_MIN_VERSION" ]]; then
     $CARGO_BIN generate-lockfile
 else
+    # generate lockfile with resolver v3 using stable toolchain
+    $CARGO_STABLE_BIN generate-lockfile
+
+    # then make it MSRV-compatible
     # must declare workspace resolver, or it defaults to v1
     sed -Ei '/resolver ?=/ s/3/2/' Cargo.toml
-
-    $CARGO_BIN generate-lockfile
-
-    # manually downgrade dependencies to compatible versions
-    $CARGO_BIN update --package phf --precise 0.13.1
-    $CARGO_BIN update --package unicode-segmentation --precise 1.12.0
 fi
