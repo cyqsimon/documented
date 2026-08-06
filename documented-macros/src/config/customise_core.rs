@@ -164,11 +164,10 @@ pub fn ensure_unique_options(opts: &[ConfigOption]) -> syn::Result<()> {
     for (kind, opts) in opts
         .iter()
         .into_group_map_by(|opt| ConfigOptionKind::from(&opt.data))
-        .into_iter()
     {
         match &opts[..] {
             [] => unreachable!(), // guaranteed by `into_group_map_by`
-            [_unique] => continue,
+            [_unique] => (),
             [first, rest @ ..] => {
                 let initial_error = Error::new(
                     first.span,
@@ -178,7 +177,7 @@ pub fn ensure_unique_options(opts: &[ConfigOption]) -> syn::Result<()> {
                     err.combine(Error::new(opt.span, "Duplicate declaration here"));
                     err
                 });
-                Err(final_error)?
+                Err(final_error)?;
             }
         }
     }

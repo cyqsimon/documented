@@ -87,7 +87,7 @@ use crate::{
     proc_macro_derive(Documented, attributes(documented))
 )]
 pub fn documented(input: TokenStream) -> TokenStream {
-    documented_impl(parse_macro_input!(input), DocType::Str)
+    documented_impl(&parse_macro_input!(input), DocType::Str)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
@@ -101,7 +101,7 @@ pub fn documented(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedOpt, attributes(documented))
 )]
 pub fn documented_opt(input: TokenStream) -> TokenStream {
-    documented_impl(parse_macro_input!(input), DocType::OptStr)
+    documented_impl(&parse_macro_input!(input), DocType::OptStr)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
@@ -275,7 +275,7 @@ pub fn documented_opt(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedFields, attributes(documented_fields))
 )]
 pub fn documented_fields(input: TokenStream) -> TokenStream {
-    documented_fields_impl(parse_macro_input!(input), DocType::Str)
+    documented_fields_impl(&parse_macro_input!(input), DocType::Str)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
@@ -289,7 +289,7 @@ pub fn documented_fields(input: TokenStream) -> TokenStream {
     proc_macro_derive(DocumentedFieldsOpt, attributes(documented_fields))
 )]
 pub fn documented_fields_opt(input: TokenStream) -> TokenStream {
-    documented_fields_impl(parse_macro_input!(input), DocType::OptStr)
+    documented_fields_impl(&parse_macro_input!(input), DocType::OptStr)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
@@ -492,9 +492,9 @@ pub fn documented_variants_opt(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn docs_const(#[allow(unused_variables)] attr: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(not(feature = "customise"))]
-    let ts = docs_const_impl(parse_macro_input!(item));
+    let ts = docs_const_impl(&parse_macro_input!(item));
     #[cfg(feature = "customise")]
-    let ts = docs_const_impl(parse_macro_input!(item), parse_macro_input!(attr));
+    let ts = docs_const_impl(&parse_macro_input!(item), parse_macro_input!(attr));
 
     ts.unwrap_or_else(Error::into_compile_error).into()
 }

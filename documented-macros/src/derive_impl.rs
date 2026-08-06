@@ -49,7 +49,7 @@ impl DocType {
     /// And fallibly returns the tokenised doc comments.
     #[allow(clippy::type_complexity)]
     fn docs_handler_opt<S>(
-        &self,
+        self,
     ) -> Box<dyn Fn(Option<DocContent>, Option<Expr>, S) -> syn::Result<TokenStream>>
     where
         S: ToTokens,
@@ -74,7 +74,7 @@ impl DocType {
     }
 
     /// Get the trait identifier, given a prefix.
-    fn trait_ident_for(&self, prefix: &str) -> Ident {
+    fn trait_ident_for(self, prefix: &str) -> Ident {
         let name = match self {
             Self::Str => prefix.to_string(),
             Self::OptStr => format!("{prefix}Opt"),
@@ -84,7 +84,7 @@ impl DocType {
 }
 
 /// Shared implementation of `Documented` & `DocumentedOpt`.
-pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
+pub fn documented_impl(input: &DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
     let trait_ident = docs_ty.trait_ident_for("Documented");
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -96,7 +96,7 @@ pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<Toke
         .map(|c| DeriveConfig::default().with_customisations(c))?;
 
     let docs = get_docs(&input.attrs, config.trim)
-        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, config.default_value, &input))?;
+        .and_then(|docs_opt| docs_ty.docs_handler_opt()(docs_opt, config.default_value, input))?;
 
     Ok(quote! {
         #[automatically_derived]
@@ -107,7 +107,7 @@ pub fn documented_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<Toke
 }
 
 /// Shared implementation of `DocumentedFields` & `DocumentedFieldsOpt`.
-pub fn documented_fields_impl(input: DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
+pub fn documented_fields_impl(input: &DeriveInput, docs_ty: DocType) -> syn::Result<TokenStream> {
     let trait_ident = docs_ty.trait_ident_for("DocumentedFields");
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();

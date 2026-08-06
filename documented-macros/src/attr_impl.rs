@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn docs_const_impl(
-    item: Item,
+    item: &Item,
     #[cfg(feature = "customise")] customisations: AttrCustomisations,
 ) -> syn::Result<TokenStream> {
     #[cfg(not(feature = "customise"))]
@@ -21,12 +21,12 @@ pub fn docs_const_impl(
     #[cfg(feature = "customise")]
     let config = AttrConfig::default().with_customisations(customisations);
 
-    let (item_vis, item_name, attrs) = get_vis_name_attrs(&item)?;
+    let (item_vis, item_name, attrs) = get_vis_name_attrs(item)?;
 
     let docs = match (get_docs(attrs, config.trim)?, config.default_value) {
         (Some(docs), _) => Ok(quote! { #docs }),
         (None, Some(default)) => Ok(quote! { #default }),
-        (None, None) => Err(Error::new_spanned(&item, "Missing doc comments")),
+        (None, None) => Err(Error::new_spanned(item, "Missing doc comments")),
     }?;
 
     let const_vis = config.custom_vis.unwrap_or(item_vis);
