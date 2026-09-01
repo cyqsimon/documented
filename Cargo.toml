@@ -19,7 +19,7 @@ rust-version = "1.71.0"
 version = "0.10.0"
 
 [workspace.dependencies]
-convert_case = "0.11.0"
+convert_case = "0.12.0"
 documented = { path = "lib", default-features = false }
 documented-macros = { path = "documented-macros", version = "0.10.0" }
 itertools = "0.15.0"
